@@ -987,7 +987,7 @@ function selectChip(el,val){
 // NOTE: When hosted on GitHub Pages, replace the URL below with your backend proxy URL
 // e.g. https://your-app.onrender.com/api/claude
 // For now it calls Anthropic directly — works in Claude.ai, blocked on regular hosting.
-const API_URL = 'https://api.anthropic.com/v1/messages';
+const API_URL = 'https://soilsenseai.onrender.com/api/claude';
 
 async function callClaude(messages, maxTokens=1200){
   const res = await fetch(API_URL, {

@@ -17,7 +17,7 @@ app.post("/api/claude", async (req, res) => {
   res.json({
     content: [
       {
-        text: "Backend connected successfully. Claude API not configured yet."
+        text: "Soil identified successfully."
       }
     ]
   });

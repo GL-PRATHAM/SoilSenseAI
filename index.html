@@ -1,6 +1,1185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SoilSense AI — Soil Classification | MIT Mysore</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Lora:ital,wght@0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1e3d;--navy2:#122952;--blue:#1a6bcc;--blue-light:#3d8ef0;--sky:#e8f2ff;
+  --teal:#0d9488;--teal-light:#14b8a6;--amber:#d97706;--amber-light:#f59e0b;--amber-pale:#fef3c7;
+  --green:#16a34a;--green-pale:#dcfce7;--red-soil:#b84c2a;--white:#ffffff;--off-white:#f8faff;
+  --gray-50:#f1f5f9;--gray-100:#e2e8f0;--gray-400:#94a3b8;--gray-600:#475569;--gray-800:#1e293b;--text:#0f172a;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',sans-serif;background:var(--off-white);color:var(--text);overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(11,30,61,0.97);backdrop-filter:blur(16px);height:66px;padding:0 2.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(61,142,240,0.2)}
+.nav-brand{display:flex;align-items:center;gap:12px}
+.nav-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.nav-title{font-family:'Lora',serif;font-size:1.2rem;font-weight:600;color:#fff;letter-spacing:0.01em}
+.nav-title span{font-size:0.72rem;font-family:'Sora',sans-serif;font-weight:300;color:rgba(255,255,255,0.55);display:block;letter-spacing:0.04em}
+.nav-links{display:flex;gap:1.5rem;list-style:none}
+.nav-links a{color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.8rem;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;transition:color 0.2s}
+.nav-links a:hover{color:var(--amber-light)}
+
+.hero{min-height:100vh;background:linear-gradient(135deg,var(--navy) 0%,#0f2d5e 50%,#0a1f40 100%);position:relative;overflow:hidden;display:flex;align-items:center;padding:7rem 2.5rem 4rem}
+.hero-dots{position:absolute;inset:0;opacity:0.06;background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:32px 32px}
+.hero-glow{position:absolute;top:-200px;right:-100px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(26,107,204,0.25) 0%,transparent 70%);pointer-events:none}
+.hero-glow2{position:absolute;bottom:-150px;left:-50px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,0.18) 0%,transparent 70%);pointer-events:none}
+.hero-right-img{position:absolute;right:0;top:0;bottom:0;width:42%;background:url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Soil_profile.jpg/800px-Soil_profile.jpg') center/cover no-repeat;opacity:0.18;clip-path:polygon(12% 0,100% 0,100% 100%,0 100%)}
+.hero-inner{position:relative;z-index:2;max-width:700px}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(61,142,240,0.15);border:1px solid rgba(61,142,240,0.35);color:#7ec8ff;padding:7px 20px;border-radius:100px;font-size:0.73rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2rem;animation:fadeUp 0.7s ease both}
+.hero h1{font-family:'Lora',serif;font-size:clamp(2.6rem,5.5vw,4.5rem);font-weight:600;color:#fff;line-height:1.12;margin-bottom:1.5rem;animation:fadeUp 0.7s 0.1s ease both}
+.hero h1 em{font-style:italic;background:linear-gradient(90deg,var(--amber-light),var(--teal-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:1.05rem;color:rgba(255,255,255,0.65);line-height:1.8;max-width:540px;margin-bottom:2.5rem;font-weight:300;animation:fadeUp 0.7s 0.2s ease both}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;animation:fadeUp 0.7s 0.3s ease both}
+.btn-main{background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;padding:14px 34px;border-radius:10px;text-decoration:none;font-size:0.95rem;font-weight:600;letter-spacing:0.01em;transition:opacity 0.2s,transform 0.15s;display:inline-block;box-shadow:0 4px 20px rgba(26,107,204,0.4)}
+.btn-main:hover{opacity:0.9;transform:translateY(-2px)}
+.btn-ghost{border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.8);padding:14px 34px;border-radius:10px;text-decoration:none;font-size:0.95rem;font-weight:400;transition:border-color 0.2s,background 0.2s;display:inline-block}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+.hero-stats{display:flex;gap:3rem;margin-top:4rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.1);animation:fadeUp 0.7s 0.4s ease both}
+.stat-n{font-family:'Lora',serif;font-size:2.2rem;font-weight:600;color:var(--amber-light);line-height:1}
+.stat-l{font-size:0.73rem;color:rgba(255,255,255,0.45);letter-spacing:0.05em;margin-top:5px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.info-band{background:linear-gradient(90deg,var(--teal) 0%,var(--blue) 100%);padding:3rem 2.5rem}
+.info-band-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:2rem}
+.ib-card{border-left:2px solid rgba(255,255,255,0.4);padding-left:1.25rem}
+.ib-label{font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:5px}
+.ib-val{font-family:'Lora',serif;font-size:1rem;font-weight:600;color:#fff;line-height:1.3}
+.ib-sub{font-size:0.77rem;color:rgba(255,255,255,0.6);margin-top:3px}
+
+.sec{padding:5.5rem 2.5rem}
+.sec-inner{max-width:1100px;margin:0 auto}
+.sec-tag{font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:0.75rem}
+.sec-title{font-family:'Lora',serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:600;color:var(--gray-800);line-height:1.2;margin-bottom:1.1rem}
+.sec-lead{font-size:1rem;color:var(--gray-600);line-height:1.85;max-width:620px}
+
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.about-img{width:100%;height:400px;object-fit:cover;border-radius:20px;display:block}
+.about-img-wrap{position:relative}
+.about-img-badge{position:absolute;bottom:-1rem;left:-1rem;background:var(--navy);color:#fff;padding:1rem 1.25rem;border-radius:14px;font-size:0.8rem;line-height:1.5;border-left:3px solid var(--amber-light)}
+.about-quote{margin-top:1.75rem;padding:1.25rem 1.5rem;background:var(--sky);border-radius:12px;border-left:3px solid var(--blue)}
+.about-quote p{font-family:'Lora',serif;font-size:0.92rem;font-style:italic;color:var(--navy2);line-height:1.7}
+.about-quote cite{font-size:0.75rem;color:var(--blue);font-style:normal;font-weight:600;display:block;margin-top:0.5rem}
+
+.soils-bg{background:#fff}
+.soils-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.75rem;margin-top:3rem}
+.sc{border-radius:18px;overflow:hidden;border:1px solid var(--gray-100);transition:transform 0.25s,box-shadow 0.25s;background:#fff}
+.sc:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(15,23,42,0.1)}
+.sc-img-wrap{position:relative;overflow:hidden;height:210px}
+.sc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s}
+.sc:hover .sc-img{transform:scale(1.04)}
+.sc-type-badge{position:absolute;top:12px;left:12px;background:rgba(11,30,61,0.75);backdrop-filter:blur(6px);color:#fff;font-size:0.65rem;padding:4px 12px;border-radius:100px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600}
+.sc-body{padding:1.25rem 1.5rem 1.5rem}
+.sc-name{font-family:'Lora',serif;font-size:1.25rem;font-weight:600;color:var(--gray-800);margin-bottom:0.5rem}
+.sc-desc{font-size:0.85rem;color:var(--gray-600);line-height:1.72;margin-bottom:1rem}
+.sc-tags{display:flex;flex-wrap:wrap;gap:6px}
+.sc-tag{background:var(--sky);color:var(--blue);font-size:0.7rem;padding:4px 11px;border-radius:100px;font-weight:500}
+
+/* AI TOOLS TABS */
+.ai-tabs-bg{background:linear-gradient(180deg,var(--off-white) 0%,var(--sky) 100%);padding:5.5rem 2.5rem}
+.ai-tabs-inner{max-width:1100px;margin:0 auto}
+.tabs-row{display:flex;gap:8px;margin-bottom:2.5rem;flex-wrap:wrap}
+.tab-btn{padding:10px 22px;border-radius:10px;border:2px solid var(--gray-100);background:#fff;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--gray-600)}
+.tab-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* SHARED PANEL STYLES */
+.cls-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start;margin-top:1.5rem}
+.upload-box{background:#fff;border-radius:20px;padding:2rem;box-shadow:0 4px 24px rgba(11,30,61,0.08)}
+.upload-zone{border:2px dashed var(--blue-light);border-radius:14px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;position:relative;background:var(--sky)}
+.upload-zone:hover{border-color:var(--blue);background:#dbeafe}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#previewImg{width:100%;height:230px;object-fit:cover;border-radius:10px;display:none;margin-bottom:1rem}
+.upload-icon-big{font-size:2.5rem;margin-bottom:0.75rem}
+.upload-title{font-weight:600;font-size:1rem;color:var(--navy);margin-bottom:0.35rem}
+.upload-hint{font-size:0.8rem;color:var(--gray-400)}
+.analyze-btn{width:100%;margin-top:1rem;padding:14px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;border:none;border-radius:12px;font-size:1rem;font-family:'Sora',sans-serif;font-weight:600;cursor:pointer;letter-spacing:0.01em;display:none;transition:opacity 0.2s}
+.analyze-btn:hover{opacity:0.88}
+.spin-row{display:none;align-items:center;gap:10px;margin-top:1rem;color:var(--gray-600);font-size:0.875rem}
+.spinner{width:20px;height:20px;border:2.5px solid var(--gray-100);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip-box{margin-top:1.25rem;padding:0.9rem 1rem;background:var(--amber-pale);border-radius:10px;border-left:3px solid var(--amber)}
+.tip-box p{font-size:0.78rem;color:#92400e;line-height:1.6}
+.err-msg{color:#dc2626;font-size:0.85rem;margin-top:0.75rem;display:none;padding:10px;background:#fef2f2;border-radius:8px;border-left:3px solid #dc2626}
+
+.result-placeholder{background:#fff;border-radius:20px;padding:3rem 2rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;border:2px dashed var(--gray-100)}
+.ph-icon{font-size:3rem;margin-bottom:1rem;opacity:0.35}
+.ph-text{font-size:0.9rem;color:var(--gray-400);line-height:1.7}
+.result-panel{background:var(--navy);border-radius:20px;padding:2rem;display:none;color:#fff}
+.r-label{font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px}
+.r-type-badge{display:inline-block;background:rgba(61,142,240,0.2);border:1px solid rgba(61,142,240,0.4);color:#7ec8ff;font-size:0.7rem;padding:4px 14px;border-radius:100px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.r-name{font-family:'Lora',serif;font-size:1.9rem;font-weight:600;color:#fff;margin-bottom:0.25rem}
+.r-conf-label{font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:5px}
+.r-bar{height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin-bottom:5px}
+.r-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal-light),var(--blue-light));border-radius:4px;transition:width 0.7s ease}
+.r-conf-pct{font-size:0.78rem;color:var(--teal-light);margin-bottom:1rem;font-weight:600}
+.r-desc{font-size:0.875rem;color:rgba(255,255,255,0.7);line-height:1.75;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,0.1)}
+.r-props{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.r-prop{background:rgba(255,255,255,0.06);border-radius:10px;padding:12px}
+.r-prop-lbl{font-size:0.63rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:4px}
+.r-prop-val{font-size:0.88rem;color:#fff;font-weight:500}
+
+/* PROPERTY INPUT PANEL */
+.prop-form{background:#fff;border-radius:20px;padding:2rem;box-shadow:0 4px 24px rgba(11,30,61,0.08)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:0.75rem;font-weight:600;color:var(--gray-600);letter-spacing:0.05em;text-transform:uppercase}
+.form-group select,.form-group input{padding:10px 13px;border:1.5px solid var(--gray-100);border-radius:9px;font-family:'Sora',sans-serif;font-size:0.88rem;color:var(--text);background:#fff;outline:none;transition:border-color 0.2s}
+.form-group select:focus,.form-group input:focus{border-color:var(--blue)}
+.prop-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;border:none;border-radius:12px;font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s}
+.prop-submit:hover{opacity:0.88}
+
+/* STRUCTURE ADVISOR */
+.struct-form{background:#fff;border-radius:20px;padding:2rem;box-shadow:0 4px 24px rgba(11,30,61,0.08)}
+.struct-form textarea{width:100%;padding:12px 14px;border:1.5px solid var(--gray-100);border-radius:10px;font-family:'Sora',sans-serif;font-size:0.9rem;resize:vertical;min-height:120px;outline:none;transition:border-color 0.2s;color:var(--text)}
+.struct-form textarea:focus{border-color:var(--blue)}
+.struct-chips{display:flex;gap:8px;flex-wrap:wrap;margin:1rem 0}
+.chip{padding:6px 16px;border-radius:100px;border:1.5px solid var(--gray-100);background:#fff;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.15s;color:var(--gray-600)}
+.chip:hover,.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.struct-submit{width:100%;padding:14px;background:linear-gradient(135deg,#7c3aed,#1a6bcc);color:#fff;border:none;border-radius:12px;font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;margin-top:0.5rem;transition:opacity 0.2s}
+.struct-submit:hover{opacity:0.88}
+
+/* AI RESULT (shared for all panels) */
+.ai-result-box{background:var(--navy);border-radius:20px;padding:2rem;color:#fff;display:none;margin-top:0}
+.ai-result-box h3{font-family:'Lora',serif;font-size:1.5rem;font-weight:600;color:#fff;margin-bottom:0.5rem}
+.ai-result-tag{display:inline-block;background:rgba(61,142,240,0.2);border:1px solid rgba(61,142,240,0.4);color:#7ec8ff;font-size:0.7rem;padding:4px 14px;border-radius:100px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:10px}
+.ai-result-body{font-size:0.875rem;color:rgba(255,255,255,0.78);line-height:1.8;white-space:pre-wrap}
+.ai-result-section{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.1)}
+.ai-result-section h4{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber-light);margin-bottom:8px;font-weight:600}
+
+/* CORS WARNING BANNER */
+.cors-banner{background:linear-gradient(135deg,#7c3aed,#1a6bcc);border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:1.75rem;color:#fff;font-size:0.82rem;line-height:1.65;display:flex;gap:12px;align-items:flex-start}
+.cors-banner strong{color:var(--amber-light)}
+
+/* TEAM */
+.team-bg{background:#fff}
+.guide-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2.5rem}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+.tc{background:var(--off-white);border-radius:18px;padding:1.75rem;text-align:center;border:1px solid var(--gray-100);transition:box-shadow 0.25s}
+.tc:hover{box-shadow:0 12px 32px rgba(15,23,42,0.08)}
+.tc-lead{border:2px solid var(--amber-light);background:#fffbeb}
+.av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin:0 auto 1rem}
+.av-s{background:var(--sky);color:var(--navy)}
+.av-p{background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff}
+.tc-role{font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.tc-name{font-family:'Lora',serif;font-size:1.15rem;color:var(--gray-800);margin-bottom:0.4rem}
+.tc-detail{font-size:0.8rem;color:var(--gray-600);line-height:1.65}
+.tc-badge{display:inline-block;margin-top:0.85rem;background:var(--gray-50);color:var(--gray-600);font-size:0.7rem;padding:5px 14px;border-radius:100px;font-weight:500;border:1px solid var(--gray-100)}
+.tc-usn{font-family:monospace;letter-spacing:0.04em;background:var(--navy);color:#7ec8ff;border:none}
+.lead-badge{display:inline-block;background:var(--amber);color:#fff;font-size:0.62rem;font-weight:700;padding:3px 12px;border-radius:100px;letter-spacing:0.08em;margin-bottom:0.5rem}
+.inst-row{margin-top:2rem;background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:18px;padding:1.75rem 2rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.inst-icon{font-size:2.2rem;flex-shrink:0}
+.inst-name{font-family:'Lora',serif;font-size:1.15rem;color:#fff;font-weight:600}
+.inst-sub{font-size:0.8rem;color:rgba(255,255,255,0.55);margin-top:3px}
+
+footer{background:var(--navy);padding:2.5rem;text-align:center;border-top:1px solid rgba(61,142,240,0.2)}
+.ft-logo{font-family:'Lora',serif;font-size:1.3rem;color:var(--amber-light);margin-bottom:0.5rem}
+.ft-line{font-size:0.8rem;color:rgba(255,255,255,0.45);margin-bottom:3px}
+.ft-date{font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:0.5rem}
+.divider{height:1px;background:linear-gradient(to right,transparent,var(--gray-100),transparent);max-width:1100px;margin:0 auto}
+
+@media(max-width:768px){
+  .about-grid,.cls-grid,.form-row{grid-template-columns:1fr}
+  .nav-links{display:none}
+  .hero-right-img{display:none}
+  .r-props{grid-template-columns:1fr}
+}
+</style>
+</head>
 <body>
-<h1>SoilSense AI</h1>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-icon">🌱</div>
+    <div class="nav-title">SoilSense AI<span>MIT Mysore · Civil Engineering</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#soil-types">Soil Types</a></li>
+    <li><a href="#ai-tools">AI Tools</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-dots"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-right-img"></div>
+  <div class="hero-inner">
+    <div class="hero-pill">🔬 AI Research Project · MIT Mysore 2026</div>
+    <h1>Identify Any Soil<br/>Type, <em>Instantly.</em></h1>
+    <p class="hero-desc">Upload a photo, enter soil properties, or describe your construction project — our 3-in-1 AI toolkit classifies soil, suggests type from properties, and advises on structural suitability.</p>
+    <div class="hero-btns">
+      <a href="#ai-tools" class="btn-main">Try the AI Tools →</a>
+      <a href="#soil-types" class="btn-ghost">Explore Soil Types</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-n">3</div><div class="stat-l">AI Tools in one site</div></div>
+      <div><div class="stat-n">8+</div><div class="stat-l">Soil types identified</div></div>
+      <div><div class="stat-n">2026</div><div class="stat-l">Research year</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="info-band">
+  <div class="info-band-inner">
+    <div class="ib-card"><div class="ib-label">Project Creator</div><div class="ib-val">GL Pratham</div><div class="ib-sub">Team Lead · Civil Engineering</div></div>
+    <div class="ib-card"><div class="ib-label">Project Guide</div><div class="ib-val">Prof. Varun.S</div><div class="ib-sub">Associate Professor, Civil Engg.</div></div>
+    <div class="ib-card"><div class="ib-label">Institution</div><div class="ib-val">Maharaja Institute of Technology</div><div class="ib-sub">Mysore, Karnataka, India</div></div>
+    <div class="ib-card"><div class="ib-label">AI Tools</div><div class="ib-val">Image · Properties · Structure</div><div class="ib-sub">3 AI panels · Powered by Claude</div></div>
+  </div>
+</div>
+
+<section class="sec" id="about">
+  <div class="sec-inner">
+    <div class="about-grid">
+      <div>
+        <div class="sec-tag">About this project</div>
+        <h2 class="sec-title">Where soil science meets artificial intelligence</h2>
+        <p class="sec-lead" style="margin-bottom:1.1rem">Developed at the Department of Civil Engineering, Maharaja Institute of Technology Mysore, this project uses AI to make soil identification fast, accurate, and accessible to engineers, researchers, and farmers.</p>
+        <p style="font-size:0.92rem;color:var(--gray-600);line-height:1.85">Three AI tools in one: upload a soil photo, enter your lab test values, or describe a planned structure — and get instant classification, quality assessment, and engineering advice.</p>
+        <div class="about-quote">
+          <p>"Understanding soil type is the foundational first step in any civil engineering project — from foundation design to road construction. This tool makes that step effortless."</p>
+          <cite>— GL Pratham, Project Creator</cite>
+        </div>
+      </div>
+      <div class="about-img-wrap">
+        <img class="about-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Soil_profile.jpg/600px-Soil_profile.jpg" alt="Soil profile layers" />
+        <div class="about-img-badge">🏛️ <strong>MIT Mysore</strong><br/>Dept. of Civil Engineering<br/>Karnataka, India</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="sec soils-bg" id="soil-types">
+  <div class="sec-inner">
+    <div class="sec-tag">Reference library</div>
+    <h2 class="sec-title">Soil types — India &amp; Karnataka</h2>
+    <p class="sec-lead">12 major soil types with photographs, physical properties, engineering data, pH ranges, drainage behaviour, and crop suitability. Click any card to expand full details.</p>
+
+    <style>
+      .sc-expand{display:none;margin-top:1rem;border-top:1px solid var(--gray-100);padding-top:1rem}
+      .sc.open .sc-expand{display:block}
+      .sc-prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.85rem}
+      .sc-prop{background:var(--gray-50);border-radius:8px;padding:8px 10px}
+      .sc-prop-l{font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:2px;font-weight:600}
+      .sc-prop-v{font-size:0.82rem;color:var(--gray-800);font-weight:600}
+      .sc-section-lbl{font-size:0.7rem;font-weight:700;color:var(--blue);letter-spacing:0.06em;text-transform:uppercase;margin:0.6rem 0 0.35rem}
+      .sc-list{list-style:none;padding:0;margin:0}
+      .sc-list li{font-size:0.82rem;color:var(--gray-600);padding:3px 0 3px 14px;position:relative;line-height:1.5}
+      .sc-list li::before{content:"•";position:absolute;left:0;color:var(--blue)}
+      .sc-eng-badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:0.7rem;font-weight:600;margin-top:4px}
+      .sc-toggle{font-size:0.75rem;color:var(--blue);font-weight:600;cursor:pointer;margin-top:0.75rem;display:inline-block}
+      .sc-bar-row{margin-bottom:6px}
+      .sc-bar-label{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--gray-600);margin-bottom:3px}
+      .sc-bar-bg{height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+      .sc-bar-fill{height:100%;border-radius:3px}
+    </style>
+
+    <div class="soils-grid">
+
+      <!-- TYPE 01 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Laterite_Soil_-_Sanjay_Acharya.jpg/640px-Laterite_Soil_-_Sanjay_Acharya.jpg" alt="Red Laterite Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Laterite_cap_rock_India.jpg/640px-Laterite_cap_rock_India.jpg'" />
+          <div class="sc-type-badge">Type 01</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Red Laterite Soil</div>
+          <div class="sc-desc">Rich in iron and aluminium oxides, giving a brick-red colour. Formed by intense tropical weathering over millions of years. The most dominant soil around Mysore and southern Karnataka.</div>
+          <div class="sc-tags"><span class="sc-tag">🟥 Iron-rich</span><span class="sc-tag">Karnataka dominant</span><span class="sc-tag">Well-drained</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">5.5 – 6.5 (Acidic)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Good to Excellent</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Low to Moderate</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Low</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Medium to Coarse</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Organic Matter</div><div class="sc-prop-v">Low</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>55%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:55%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>30%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:30%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>15%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:15%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Ragi (Finger Millet) — primary crop in Karnataka laterite zones</li><li>Cashew, Coffee, Tea — major plantation crops</li><li>Groundnut, Tapioca, Pineapple</li><li>Coconut in coastal areas</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 150–250 kN/m² — moderate foundation suitability</li><li>Excellent road subgrade material when compacted</li><li>Used directly as road metal (WBM) in Karnataka PWD projects</li><li>Shallow strip/isolated footings generally adequate</li></ul>
+            <div class="sc-section-lbl">⚠️ Challenges</div>
+            <ul class="sc-list"><li>Low fertility — needs NPK fertilizers</li><li>Hardens to brick-like consistency when dry</li><li>Susceptible to erosion on slopes</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Mysore, Hassan, Kodagu, Dakshina Kannada, Udupi districts</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 02 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Black_cotton_soil.jpg/640px-Black_cotton_soil.jpg" alt="Black Cotton Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Vertisol_Cracking.jpg/640px-Vertisol_Cracking.jpg'" />
+          <div class="sc-type-badge">Type 02</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Black Cotton Soil (Regur)</div>
+          <div class="sc-desc">Dark, highly expansive clay soil — swells dramatically when wet and develops deep shrinkage cracks when dry. One of the most challenging soils for civil engineering. Covers the Deccan Plateau extensively.</div>
+          <div class="sc-tags"><span class="sc-tag">⚫ Expansive clay</span><span class="sc-tag">Deccan Plateau</span><span class="sc-tag">High risk</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">7.5 – 8.5 (Alkaline)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Very Poor</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">High (natural)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Very High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Very Fine / Plastic</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Swelling Pressure</div><div class="sc-prop-v">Very High</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>10%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:10%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>65%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:65%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>25%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:25%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Cotton — thrives due to high moisture retention</li><li>Jowar (Sorghum), Wheat, Gram (Chickpea)</li><li>Sunflower, Sugarcane with irrigation</li><li>Oilseeds — linseed, safflower</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 50–100 kN/m² — poor, highly variable</li><li>Mandatory: Under-reamed pile foundations (4–8 m depth)</li><li>Raft foundations needed for heavy structures</li><li>Road subgrade must be stabilized with lime or fly ash</li><li>Avoid shallow footings — extreme heave risk</li></ul>
+            <div class="sc-section-lbl">⚠️ Challenges</div>
+            <ul class="sc-list"><li>Severe swelling (up to 300% volume change)</li><li>Foundation heave and settlement are major risks</li><li>Roads crack badly every monsoon season</li><li>Construction should avoid wet season where possible</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Dharwad, Gadag, Vijayapura (Bijapur), Belagavi, Bagalkot — North Karnataka</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 03 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Alluvial_soil.jpg/640px-Alluvial_soil.jpg" alt="Alluvial Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Alluvium_in_river.jpg/640px-Alluvium_in_river.jpg'" />
+          <div class="sc-type-badge">Type 03</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Alluvial Soil</div>
+          <div class="sc-desc">Deposited by rivers over centuries — a fertile blend of sand, silt, and clay. The most widespread agricultural soil in India. Found along Cauvery, Krishna, and Tungabhadra river valleys in Karnataka.</div>
+          <div class="sc-tags"><span class="sc-tag">🟫 Most fertile</span><span class="sc-tag">River valleys</span><span class="sc-tag">High productivity</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">6.5 – 7.5 (Neutral)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Moderate to Good</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Very High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Moderate to High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Fine to Medium</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Organic Matter</div><div class="sc-prop-v">Moderate to High</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>35%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:35%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>25%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:25%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>40%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:40%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Rice (Paddy) — primary crop in Karnataka alluvial zones</li><li>Sugarcane, Wheat, Maize</li><li>Vegetables, Banana, Mango</li><li>Pulse crops — tur, moong, urad</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 100–200 kN/m² — good for low to medium structures</li><li>Strip or isolated footings at 1.2–1.8 m depth</li><li>Check for loose/soft layers — SPT test mandatory</li><li>Avoid deep excavation without shoring</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Cauvery valley (Mysore, Mandya), Krishna valley (Gulbarga), Tungabhadra basin (Bellary, Raichur)</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 04 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Sandy_soil.jpg/640px-Sandy_soil.jpg" alt="Sandy Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Sand_at_beach.jpg/640px-Sand_at_beach.jpg'" />
+          <div class="sc-type-badge">Type 04</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Sandy Soil</div>
+          <div class="sc-desc">Coarse-grained soil with large particles, very low cohesion, and extremely fast drainage. Cannot retain water or nutrients effectively. Common in coastal Karnataka and desert regions.</div>
+          <div class="sc-tags"><span class="sc-tag">🟡 Coarse texture</span><span class="sc-tag">Fast-draining</span><span class="sc-tag">Coastal</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">5.5 – 7.0</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Excellent (too fast)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Very Low</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Very Low</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Coarse, Gritty</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Cohesion</div><div class="sc-prop-v">Very Low / None</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>85%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:85%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>5%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:5%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>10%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:10%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Groundnut, Watermelon, Carrot, Radish</li><li>Cashew — grows well in coastal sandy soils</li><li>Coconut, Casuarina along coastal areas</li><li>Root vegetables — yam, sweet potato</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 100–300 kN/m² (depends on compaction and depth)</li><li>Good for piled foundations if compacted dense sand</li><li>Risk of liquefaction in seismic zones — check IS 1893</li><li>Excellent drainage layer in road pavement construction</li><li>Used as fine aggregate in concrete (river sand)</li></ul>
+            <div class="sc-section-lbl">⚠️ Challenges</div>
+            <ul class="sc-list"><li>Low bearing capacity when loose — needs deep investigation</li><li>Scour risk near water bodies and bridges</li><li>Wind erosion in arid areas</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 05 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Loam_Soil_Texture.jpg/640px-Loam_Soil_Texture.jpg" alt="Loamy Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Loam_magnified.jpg/640px-Loam_magnified.jpg'" />
+          <div class="sc-type-badge">Type 05</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Loamy Soil</div>
+          <div class="sc-desc">The ideal agricultural soil — a balanced blend of sand (40%), silt (40%), and clay (20%). Retains moisture yet drains well. Supports virtually all crops and has excellent bearing capacity for structures.</div>
+          <div class="sc-tags"><span class="sc-tag">🌱 Best for farming</span><span class="sc-tag">Balanced</span><span class="sc-tag">High fertility</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">6.0 – 7.0 (Neutral)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Good (balanced)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Very High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Good</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Crumbly, Soft</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Organic Matter</div><div class="sc-prop-v">High</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>40%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:40%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>20%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:20%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>40%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:40%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>All vegetables — tomato, brinjal, beans, capsicum</li><li>Wheat, Maize, Soybean, Sunflower</li><li>Fruit crops — mango, guava, papaya</li><li>Flowers — rose, jasmine (Mysore region)</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 150–250 kN/m² — good for most structures</li><li>Isolated/strip footings at 1.0–1.5 m depth work well</li><li>Stable for road embankments with minimal treatment</li><li>Ideal for backfill and landscaping</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 06 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Clay_soil.jpg/640px-Clay_soil.jpg" alt="Clay Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Clay-ss-2005.jpg/640px-Clay-ss-2005.jpg'" />
+          <div class="sc-type-badge">Type 06</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Clay Soil</div>
+          <div class="sc-desc">Fine-grained, dense soil with tiny particles packing tightly together. Extremely high plasticity and water retention, very slow drainage. Critical material in dam construction and earthworks.</div>
+          <div class="sc-tags"><span class="sc-tag">🧱 Fine-grained</span><span class="sc-tag">High plasticity</span><span class="sc-tag">Dam material</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">6.0 – 7.5</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Very Poor</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">High (nutrient-rich)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Very High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Plasticity Index</div><div class="sc-prop-v">High (&gt;17)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Liquid Limit</div><div class="sc-prop-v">&gt;50%</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>10%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:10%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>70%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:70%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>20%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:20%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Rice (Paddy) — waterlogged conditions suitable</li><li>Cabbage, Broccoli, Cauliflower</li><li>Lotus, Water chestnut in wetlands</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 75–150 kN/m² — moderate, needs careful investigation</li><li>Core material in earth dams and embankments (low permeability)</li><li>Pile foundations preferred for heavy loads</li><li>Consolidation settlements can be significant — monitoring required</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 07 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Silty_soil.jpg/640px-Silty_soil.jpg" alt="Silty Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Soil_Texture_Triangle.jpg/640px-Soil_Texture_Triangle.jpg'" />
+          <div class="sc-type-badge">Type 07</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Silty Soil</div>
+          <div class="sc-desc">Smooth and slippery when wet, powdery when dry. Found near rivers, flood plains, and lake beds. Fertile and moisture-retentive but compacts easily under traffic or machinery.</div>
+          <div class="sc-tags"><span class="sc-tag">💧 Smooth texture</span><span class="sc-tag">River flood plains</span><span class="sc-tag">Fertile</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">6.0 – 7.0</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Moderate (slow)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Moderate to High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Smooth, Silky</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Compressibility</div><div class="sc-prop-v">Medium to High</div></div>
+            </div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Sand</span><span>20%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:20%;background:#e6b800"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Clay</span><span>15%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:15%;background:#a0522d"></div></div></div>
+            <div class="sc-bar-row"><div class="sc-bar-label"><span>Silt</span><span>65%</span></div><div class="sc-bar-bg"><div class="sc-bar-fill" style="width:65%;background:#7b8ec8"></div></div></div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Rice, Wheat — excellent in flood-irrigated silty areas</li><li>Sugarcane, Jute, Tobacco</li><li>Vegetables near river banks</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 75–150 kN/m² — moderate</li><li>Susceptible to frost heave and liquefaction</li><li>Poor subgrade for roads — stabilization needed</li><li>Sheet piling needed for deep excavations near rivers</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 08 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Soil_Peaty_Organic.jpg/640px-Soil_Peaty_Organic.jpg" alt="Peaty Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Peat_soil.jpg/640px-Peat_soil.jpg'" />
+          <div class="sc-type-badge">Type 08</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Peaty Soil</div>
+          <div class="sc-desc">Dark, spongy soil formed from partially decomposed organic matter in waterlogged conditions. Highly acidic with extremely high water content. Found in Kodagu wetlands and coastal Kerala borders.</div>
+          <div class="sc-tags"><span class="sc-tag">🌿 High organic</span><span class="sc-tag">Acidic</span><span class="sc-tag">Wetlands</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">3.5 – 5.5 (Very Acidic)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Very Poor</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Low (acidic)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Extremely High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Organic Content</div><div class="sc-prop-v">Very High (&gt;20%)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Compressibility</div><div class="sc-prop-v">Extremely High</div></div>
+            </div>
+            <div class="sc-section-lbl">🌾 Best Crops (after treatment)</div>
+            <ul class="sc-list"><li>Blueberries, Cranberries — acid-loving plants</li><li>Azalea, Rhododendron (ornamental)</li><li>Rice in naturally waterlogged areas</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: &lt;50 kN/m² — extremely poor, avoid if possible</li><li>Peat must be completely removed and replaced for any structure</li><li>Pile foundations to competent strata below peat layer</li><li>Surcharge preloading required if peat cannot be removed</li></ul>
+            <div class="sc-section-lbl">⚠️ Major Risk</div>
+            <ul class="sc-list"><li>Extremely high consolidation settlement — can sink for years</li><li>Not suitable for any direct foundation without treatment</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 09 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Forest_soil_rich_in_humus.jpg/640px-Forest_soil_rich_in_humus.jpg" alt="Forest Humus Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Humus_soil_dark.jpg/640px-Humus_soil_dark.jpg'" />
+          <div class="sc-type-badge">Type 09</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Forest / Humus-rich Soil</div>
+          <div class="sc-desc">Dark brown to black soil rich in decomposed organic matter (humus). Found in dense forest areas — very common in the Western Ghats, Kodagu (Coorg), and forested slopes of Karnataka.</div>
+          <div class="sc-tags"><span class="sc-tag">🍂 Humus-rich</span><span class="sc-tag">Western Ghats</span><span class="sc-tag">Dark brown</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">5.5 – 6.8 (Slightly Acidic)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Good</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Very High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Good</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Organic Matter</div><div class="sc-prop-v">Very High (5–15%)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Microbial Activity</div><div class="sc-prop-v">Very High</div></div>
+            </div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Coffee, Cardamom, Pepper — main Kodagu crops</li><li>Areca nut, Banana, Ginger</li><li>All spice crops in shaded conditions</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>Topsoil must be stripped before construction</li><li>Organic content causes long-term settlement — not used as fill</li><li>Good parent material for landscape and garden work</li><li>Slopes need erosion protection — high landslide risk when cleared</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Kodagu, Shivamogga, Chikkamagaluru, Hassan — Western Ghats zone</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 10 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Soil_profile.jpg/640px-Soil_profile.jpg" alt="Mixed Red Black Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Reddish-brown_soil.jpg/640px-Reddish-brown_soil.jpg'" />
+          <div class="sc-type-badge">Type 10</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Mixed Red &amp; Black Soil</div>
+          <div class="sc-desc">Transition zone soil found where Red Laterite and Black Cotton regions meet. Properties are intermediate — moderate clay, moderate swelling, moderate fertility. Common in central Karnataka districts.</div>
+          <div class="sc-tags"><span class="sc-tag">🟤 Transition zone</span><span class="sc-tag">Central Karnataka</span><span class="sc-tag">Mixed properties</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">6.5 – 7.5</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Moderate</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Moderate to High</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Moderate</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Swelling</div><div class="sc-prop-v">Low to Moderate</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Medium Clay</div></div>
+            </div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Jowar, Bajra, Groundnut</li><li>Cotton, Sunflower, Maize</li><li>Pulses — tur dal, green gram</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 100–175 kN/m² — moderate, site-specific investigation needed</li><li>Properties vary greatly within short distances</li><li>Soil testing at every structure location is mandatory</li><li>Strip or isolated footings viable for G+3 buildings</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Tumkur, Mandya, Chamarajanagar, Hassan transition areas</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 11 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Chalky_soil.jpg/640px-Chalky_soil.jpg" alt="Chalky Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Limestone_outcrop.jpg/640px-Limestone_outcrop.jpg'" />
+          <div class="sc-type-badge">Type 11</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Chalky / Limestone Soil</div>
+          <div class="sc-desc">Pale grey to white, alkaline soil overlying chalk or limestone bedrock. Very free-draining, shallow, and stony. Causes yellowing (chlorosis) in acid-loving plants. Found in Vijayapura and Chitradurga limestone tracts.</div>
+          <div class="sc-tags"><span class="sc-tag">⬜ Alkaline</span><span class="sc-tag">Limestone areas</span><span class="sc-tag">Free-draining</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">7.5 – 8.5 (Alkaline)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Very Fast</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Low to Moderate</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Water Retention</div><div class="sc-prop-v">Low</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Stony, Pale</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">CaCO₃ Content</div><div class="sc-prop-v">High (&gt;15%)</div></div>
+            </div>
+            <div class="sc-section-lbl">🌾 Best Crops</div>
+            <ul class="sc-list"><li>Lavender, Thyme, Sage — alkaline-tolerant herbs</li><li>Brassicas — cabbage, cauliflower, spinach</li><li>Wheat, Barley in deeper chalk soils</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC: 200–500 kN/m² if on solid limestone bedrock — excellent</li><li>Check for karst features — caves and sinkholes below</li><li>Sulphate attack on concrete — use sulphate-resistant cement</li><li>Rock anchors and rock socketed piles work well</li></ul>
+            <div class="sc-section-lbl">📍 Karnataka Locations</div>
+            <ul class="sc-list"><li>Vijayapura (Bijapur), Chitradurga, Bagalkot limestone outcrops</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+      <!-- TYPE 12 -->
+      <div class="sc" onclick="toggleSoil(this)">
+        <div class="sc-img-wrap">
+          <img class="sc-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Saline_soil_Rajasthan.jpg/640px-Saline_soil_Rajasthan.jpg" alt="Saline Soil"
+            onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Salt_affected_soil.jpg/640px-Salt_affected_soil.jpg'" />
+          <div class="sc-type-badge">Type 12</div>
+        </div>
+        <div class="sc-body">
+          <div class="sc-name">Saline / Alkaline Soil</div>
+          <div class="sc-desc">Soil with high salt content — white crust visible on surface. Found in arid and coastal regions, and areas with poor irrigation drainage. Hostile to most crops; causes severe corrosion of concrete and steel reinforcement.</div>
+          <div class="sc-tags"><span class="sc-tag">🧂 High salinity</span><span class="sc-tag">Coastal / arid</span><span class="sc-tag">Corrosive</span></div>
+          <div class="sc-expand">
+            <div class="sc-prop-grid">
+              <div class="sc-prop"><div class="sc-prop-l">pH Range</div><div class="sc-prop-v">8.5 – 10.0 (Very Alkaline)</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Drainage</div><div class="sc-prop-v">Poor</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Fertility</div><div class="sc-prop-v">Very Low</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">EC (Salinity)</div><div class="sc-prop-v">&gt;4 dS/m</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Texture</div><div class="sc-prop-v">Variable</div></div>
+              <div class="sc-prop"><div class="sc-prop-l">Corrosivity</div><div class="sc-prop-v">Very High</div></div>
+            </div>
+            <div class="sc-section-lbl">🌾 Best Crops (salt-tolerant)</div>
+            <ul class="sc-list"><li>Barley, Sugar beet — highly salt-tolerant</li><li>Coconut in coastal saline areas</li><li>Mangrove species in coastal wetlands</li></ul>
+            <div class="sc-section-lbl">🏗️ Engineering Use</div>
+            <ul class="sc-list"><li>SBC varies widely — site investigation essential</li><li>Sulphate-resistant (SR) cement mandatory for all concrete</li><li>Epoxy-coated or stainless-steel reinforcement required</li><li>Cathodic protection for buried pipelines and piles</li><li>Concrete cover increased to 50–75 mm for durability</li></ul>
+            <div class="sc-section-lbl">⚠️ Construction Risk</div>
+            <ul class="sc-list"><li>Severe corrosion of RCC structures — dramatically reduces lifespan</li><li>Chemical stabilization needed before use as fill</li></ul>
+          </div>
+          <span class="sc-toggle">▼ Show full data</span>
+        </div>
+      </div>
+
+    </div><!-- end soils-grid -->
+  </div>
+</section>
+
+<script>
+function toggleSoil(card){
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  const toggle = card.querySelector('.sc-toggle');
+  if(toggle) toggle.textContent = isOpen ? '▼ Show full data' : '▲ Hide data';
+}
+</script>
+
+<div class="divider"></div>
+
+<!-- ====== AI TOOLS SECTION ====== -->
+<section class="ai-tabs-bg" id="ai-tools">
+  <div class="ai-tabs-inner">
+    <div class="sec-tag">3-in-1 AI Toolkit</div>
+    <h2 class="sec-title">AI Soil Analysis Tools</h2>
+    <p class="sec-lead" style="margin-bottom:2rem">Three ways to analyse your soil — by photo, by entering lab values, or by describing your construction project.</p>
+
+    <!-- CORS NOTE -->
+    <div class="cors-banner">
+      <span style="font-size:1.4rem;flex-shrink:0">⚠️</span>
+      <div>
+        <strong>Note for hosting:</strong> When you host this on GitHub Pages, the AI calls need a small backend proxy server (to add your API key) — otherwise the browser will show a <strong>"Failed to fetch" / CORS error</strong>. This is normal and expected. The AI works perfectly inside Claude.ai because Claude handles it automatically. To fix it on GitHub Pages: set up a free Render.com Node.js proxy (takes ~30 minutes, completely free). <strong>Ask GL Pratham or use the setup guide below for help.</strong>
+      </div>
+    </div>
+
+    <div class="tabs-row">
+      <button class="tab-btn active" onclick="switchTab('img')">📷 Tool 1 — Image Classifier</button>
+      <button class="tab-btn" onclick="switchTab('prop')">🧪 Tool 2 — Property Input</button>
+      <button class="tab-btn" onclick="switchTab('struct')">🏗️ Tool 3 — Structure Advisor</button>
+    </div>
+
+    <!-- TAB 1: IMAGE -->
+    <div class="tab-panel active" id="tab-img">
+      <p style="font-size:0.9rem;color:var(--gray-600);margin-bottom:1.25rem">Upload a photo of your soil sample — any phone photo works. AI identifies the type and gives full analysis.</p>
+      <div class="cls-grid">
+        <div class="upload-box">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" accept="image/*" id="fileInput" />
+            <img id="previewImg" alt="Uploaded soil preview" />
+            <div id="uploadPrompt">
+              <div class="upload-icon-big">🌍</div>
+              <div class="upload-title">Drop your soil image here</div>
+              <div class="upload-hint">or click to browse · JPG, PNG, WEBP</div>
+            </div>
+          </div>
+          <p class="err-msg" id="imgError"></p>
+          <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()">🔬 Analyse Soil Type</button>
+          <div class="spin-row" id="imgSpin"><div class="spinner"></div><span>Analysing with AI…</span></div>
+          <div class="tip-box"><p>💡 <strong>Tip:</strong> Works best with close-up photos of bare soil in daylight. Even low-quality phone photos work — just avoid completely blurry shots.</p></div>
+        </div>
+        <div>
+          <div class="result-placeholder" id="imgPlaceholder">
+            <div class="ph-icon">🔬</div>
+            <div class="ph-text">Upload a soil image on the left<br/>and your full analysis will appear here.</div>
+          </div>
+          <div class="result-panel" id="imgResult">
+            <div class="r-type-badge">Identified</div>
+            <div class="r-label">Soil type</div>
+            <div class="r-name" id="rName">—</div>
+            <div class="r-conf-label">Confidence</div>
+            <div class="r-bar"><div class="r-bar-fill" id="rBarFill" style="width:0%"></div></div>
+            <div class="r-conf-pct" id="rConfPct">—</div>
+            <div class="r-desc" id="rDesc"></div>
+            <div class="r-props" id="rProps"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PROPERTY INPUT -->
+    <div class="tab-panel" id="tab-prop">
+      <p style="font-size:0.9rem;color:var(--gray-600);margin-bottom:1.25rem">Enter the soil properties you have measured (you don't need all of them) — AI will suggest the likely soil type and give agricultural/engineering advice.</p>
+      <div class="cls-grid">
+        <div class="prop-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Colour</label>
+              <select id="p_color">
+                <option value="">— Select —</option>
+                <option>Dark Brown / Black</option>
+                <option>Red / Reddish Brown</option>
+                <option>Light Brown / Tan</option>
+                <option>Yellow / Yellowish</option>
+                <option>Grey / Greyish</option>
+                <option>White / Pale</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Texture (feel)</label>
+              <select id="p_texture">
+                <option value="">— Select —</option>
+                <option>Gritty / Sandy</option>
+                <option>Smooth / Silky</option>
+                <option>Sticky / Plastic</option>
+                <option>Crumbly / Loose</option>
+                <option>Spongy / Soft</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>pH (if known)</label>
+              <input type="number" id="p_ph" min="3" max="10" step="0.1" placeholder="e.g. 6.5" />
+            </div>
+            <div class="form-group">
+              <label>Drainage behaviour</label>
+              <select id="p_drainage">
+                <option value="">— Select —</option>
+                <option>Water drains very fast</option>
+                <option>Water drains moderately</option>
+                <option>Water drains slowly</option>
+                <option>Water stays / waterlogged</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Organic matter visible?</label>
+              <select id="p_organic">
+                <option value="">— Select —</option>
+                <option>Yes — high (dark, rich)</option>
+                <option>Some — moderate</option>
+                <option>Very little / None</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Plasticity (when wet)</label>
+              <select id="p_plasticity">
+                <option value="">— Select —</option>
+                <option>High plasticity (moulds easily)</option>
+                <option>Medium plasticity</option>
+                <option>Low plasticity (crumbles)</option>
+                <option>Non-plastic</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sand content % (approx)</label>
+              <input type="number" id="p_sand" min="0" max="100" placeholder="e.g. 60" />
+            </div>
+            <div class="form-group">
+              <label>Clay content % (approx)</label>
+              <input type="number" id="p_clay" min="0" max="100" placeholder="e.g. 25" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label>Location / Region</label>
+            <input type="text" id="p_location" placeholder="e.g. Mysore, Karnataka" />
+          </div>
+          <p class="err-msg" id="propError"></p>
+          <button class="prop-submit" onclick="analyzeProperties()">🤖 Identify Soil from Properties</button>
+          <div class="spin-row" id="propSpin"><div class="spinner"></div><span>Analysing properties with AI…</span></div>
+        </div>
+        <div>
+          <div class="result-placeholder" id="propPlaceholder">
+            <div class="ph-icon">🧪</div>
+            <div class="ph-text">Fill in the soil properties on the left<br/>and your soil classification will appear here.</div>
+          </div>
+          <div class="ai-result-box" id="propResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: STRUCTURE ADVISOR -->
+    <div class="tab-panel" id="tab-struct">
+      <p style="font-size:0.9rem;color:var(--gray-600);margin-bottom:1.25rem">Describe the soil you have and the structure you plan to build — AI will give geotechnical advice on foundation type, suitability, and precautions.</p>
+      <div class="cls-grid">
+        <div class="struct-form">
+          <div class="form-group" style="margin-bottom:1rem">
+            <label>Soil type / description</label>
+            <input type="text" id="s_soil" placeholder="e.g. Black cotton soil, high clay, cracks when dry" />
+          </div>
+          <div class="form-group" style="margin-bottom:0.5rem">
+            <label>Structure type (select one or describe below)</label>
+          </div>
+          <div class="struct-chips">
+            <span class="chip" onclick="selectChip(this,'Residential Building (G+3 floors)')">🏠 Residential</span>
+            <span class="chip" onclick="selectChip(this,'Multi-storey Building / Apartment (G+7+)')">🏢 Apartment</span>
+            <span class="chip" onclick="selectChip(this,'Shopping Mall / Commercial Complex')">🏬 Mall</span>
+            <span class="chip" onclick="selectChip(this,'National / State Highway')">🛣️ Highway</span>
+            <span class="chip" onclick="selectChip(this,'Rural / Village Road')">🏘️ Village Road</span>
+            <span class="chip" onclick="selectChip(this,'Bridge / Flyover')">🌉 Bridge</span>
+            <span class="chip" onclick="selectChip(this,'Dam / Retaining Wall')">🏗️ Dam/Wall</span>
+            <span class="chip" onclick="selectChip(this,'Industrial Warehouse / Factory')">🏭 Industrial</span>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label>Or describe your project / extra details</label>
+            <textarea id="s_desc" placeholder="e.g. I want to build a 5-floor apartment on black cotton soil in Mysore. The plot is 30×40 ft. Groundwater level is shallow. What foundation do I use?"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Number of floors (approx)</label>
+              <input type="number" id="s_floors" min="1" max="100" placeholder="e.g. 5" />
+            </div>
+            <div class="form-group">
+              <label>Location</label>
+              <input type="text" id="s_location" placeholder="e.g. Mysore, Karnataka" />
+            </div>
+          </div>
+          <p class="err-msg" id="structError"></p>
+          <button class="struct-submit" onclick="analyzeStructure()">🏗️ Get Structural AI Advice</button>
+          <div class="spin-row" id="structSpin"><div class="spinner"></div><span>Generating geotechnical advice…</span></div>
+        </div>
+        <div>
+          <div class="result-placeholder" id="structPlaceholder">
+            <div class="ph-icon">🏗️</div>
+            <div class="ph-text">Describe your soil and planned structure on the left<br/>and AI will give foundation and engineering advice.</div>
+          </div>
+          <div class="ai-result-box" id="structResult"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="sec team-bg" id="team">
+  <div class="sec-inner">
+    <div class="sec-tag">The people behind this</div>
+    <h2 class="sec-title">Project team</h2>
+    <p class="sec-lead">Conducted at the Department of Civil Engineering, Maharaja Institute of Technology, Mysore.</p>
+    <div style="margin-top:2.5rem;margin-bottom:0.6rem;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);font-weight:600">Project guide</div>
+    <div class="guide-row">
+      <div class="tc">
+        <div class="av av-p">VS</div>
+        <div class="tc-role">Guide &amp; Mentor</div>
+        <div class="tc-name">Prof. Varun.S</div>
+        <div class="tc-detail">Associate Professor, Department of Civil Engineering, Maharaja Institute of Technology, Mysore. Specialises in soil mechanics, geotechnical engineering, and sustainable construction.</div>
+        <span class="tc-badge">Associate Professor · MIT Mysore</span>
+      </div>
+    </div>
+    <div style="margin-bottom:0.6rem;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);font-weight:600">Student team · B.E. Civil Engineering</div>
+    <div class="team-grid">
+      <div class="tc tc-lead" style="position:relative">
+        <div class="lead-badge">Team Lead</div>
+        <div class="av av-s">GP</div>
+        <div class="tc-role">Project Creator &amp; Team Lead</div>
+        <div class="tc-name">GL Pratham</div>
+        <div class="tc-detail">Leading the research, design, and development of this AI soil classification system. World Record Holder · YouTuber (@Prathamgowda0001).</div>
+        <span class="tc-badge tc-usn">USN: 4MH23CV016</span>
+      </div>
+      <div class="tc">
+        <div class="av av-s">BS</div>
+        <div class="tc-role">Team Member</div>
+        <div class="tc-name">Bharathi S</div>
+        <div class="tc-detail">Soil sample collection, data analysis, and research documentation.</div>
+        <span class="tc-badge tc-usn">USN: 4MH23CV009</span>
+      </div>
+      <div class="tc">
+        <div class="av av-s">PV</div>
+        <div class="tc-role">Team Member</div>
+        <div class="tc-name">Poorvika</div>
+        <div class="tc-detail">Literature review, classification research, and model testing.</div>
+        <span class="tc-badge tc-usn">USN: 4MH24CV408</span>
+      </div>
+      <div class="tc">
+        <div class="av av-s">VS</div>
+        <div class="tc-role">Team Member</div>
+        <div class="tc-name">Vinod S</div>
+        <div class="tc-detail">Field work, soil sample preparation, and results validation.</div>
+        <span class="tc-badge tc-usn">USN: 4MH24CV417</span>
+      </div>
+    </div>
+    <div class="inst-row">
+      <div class="inst-icon">🏛️</div>
+      <div>
+        <div class="inst-name">Maharaja Institute of Technology, Mysore</div>
+        <div class="inst-sub">Department of Civil Engineering · Affiliated to VTU, Belagavi · Mysore, Karnataka, India</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="ft-logo">SoilSense AI</div>
+  <div class="ft-line">Maharaja Institute of Technology, Mysore · Department of Civil Engineering</div>
+  <div class="ft-line">Created by GL Pratham · Under the guidance of Prof. Varun.S</div>
+  <div class="ft-date">Project initiated: May 10, 2026 &nbsp;·&nbsp; MIT Mysore, Karnataka, India</div>
+</footer>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== CHIP SELECTION =====
+let selectedStructure='';
+function selectChip(el,val){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  selectedStructure=val;
+}
+
+// ===== SHARED API CALL =====
+// NOTE: When hosted on GitHub Pages, replace the URL below with your backend proxy URL
+// e.g. https://your-app.onrender.com/api/claude
+// For now it calls Anthropic directly — works in Claude.ai, blocked on regular hosting.
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+async function callClaude(messages, maxTokens=1200){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      messages: messages
+    })
+  });
+  if(!res.ok){
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e.error?.message || 'API error '+res.status);
+  }
+  const data = await res.json();
+  return (data.content||[]).map(b=>b.text||'').join('').trim();
+}
+
+// ===== TOOL 1: IMAGE CLASSIFIER =====
+let imgB64=null, imgMime=null;
+document.getElementById('fileInput').addEventListener('change',function(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  imgMime=file.type||'image/jpeg';
+  const url=URL.createObjectURL(file);
+  const image=new Image();
+  image.onload=function(){
+    const MAX=1024;
+    let w=image.width,h=image.height;
+    if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
+    const canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    canvas.getContext('2d').drawImage(image,0,0,w,h);
+    imgMime='image/jpeg';
+    imgB64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+    const prev=document.getElementById('previewImg');
+    prev.src=canvas.toDataURL('image/jpeg',0.85);
+    prev.style.display='block';
+    document.getElementById('uploadPrompt').style.display='none';
+    document.getElementById('analyzeBtn').style.display='block';
+    document.getElementById('imgResult').style.display='none';
+    document.getElementById('imgPlaceholder').style.display='flex';
+    document.getElementById('imgError').style.display='none';
+    URL.revokeObjectURL(url);
+  };
+  image.src=url;
+});
+
+async function analyzeImage(){
+  if(!imgB64)return;
+  document.getElementById('analyzeBtn').style.display='none';
+  document.getElementById('imgSpin').style.display='flex';
+  document.getElementById('imgResult').style.display='none';
+  document.getElementById('imgPlaceholder').style.display='flex';
+  document.getElementById('imgError').style.display='none';
+  const prompt=`You are an expert soil scientist and geotechnical engineer. Analyse this soil image carefully.
+Always return a result. Respond ONLY with raw valid JSON — no markdown fences, no extra text:
+{"soil_type":"e.g. Red Laterite Soil","confidence":82,"description":"2-3 sentences about this soil type.","color":"observed colour","texture":"fine/medium/coarse","drainage":"poor/moderate/good/excellent","fertility":"low/medium/high","engineering_use":"1 sentence on suitability for civil engineering","common_crops":"2-3 suitable crops"}`;
+  try{
+    const raw=await callClaude([{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:imgMime,data:imgB64}},
+      {type:'text',text:prompt}
+    ]}]);
+    const clean=raw.replace(/^```[a-z]*\n?/i,'').replace(/```$/,'').trim();
+    let r;
+    try{r=JSON.parse(clean);}catch{const m=clean.match(/\{[\s\S]*\}/);if(m)r=JSON.parse(m[0]);else throw new Error('Parse error');}
+    // show result
+    document.getElementById('rName').textContent=r.soil_type||'Unknown';
+    const conf=Math.min(100,Math.max(0,parseInt(r.confidence)||75));
+    document.getElementById('rBarFill').style.width=conf+'%';
+    document.getElementById('rConfPct').textContent=conf+'% confidence';
+    document.getElementById('rDesc').textContent=r.description||'';
+    const props=[{l:'Colour',v:r.color},{l:'Texture',v:r.texture},{l:'Drainage',v:r.drainage},{l:'Fertility',v:r.fertility},{l:'Engineering use',v:r.engineering_use},{l:'Suited crops',v:r.common_crops}].filter(p=>p.v);
+    const grid=document.getElementById('rProps');grid.innerHTML='';
+    props.forEach(p=>{const d=document.createElement('div');d.className='r-prop';d.innerHTML='<div class="r-prop-lbl">'+p.l+'</div><div class="r-prop-val">'+p.v+'</div>';grid.appendChild(d);});
+    document.getElementById('imgPlaceholder').style.display='none';
+    document.getElementById('imgResult').style.display='block';
+  }catch(err){
+    document.getElementById('imgError').textContent='⚠️ Error: '+err.message+'. If you see CORS/fetch error, this needs the backend proxy — see note above.';
+    document.getElementById('imgError').style.display='block';
+    document.getElementById('analyzeBtn').style.display='block';
+  }finally{document.getElementById('imgSpin').style.display='none';}
+}
+
+// ===== TOOL 2: PROPERTY INPUT =====
+async function analyzeProperties(){
+  const vals={
+    color:document.getElementById('p_color').value,
+    texture:document.getElementById('p_texture').value,
+    ph:document.getElementById('p_ph').value,
+    drainage:document.getElementById('p_drainage').value,
+    organic:document.getElementById('p_organic').value,
+    plasticity:document.getElementById('p_plasticity').value,
+    sand:document.getElementById('p_sand').value,
+    clay:document.getElementById('p_clay').value,
+    location:document.getElementById('p_location').value,
+  };
+  const filled=Object.values(vals).filter(v=>v).length;
+  if(filled<2){
+    document.getElementById('propError').textContent='Please fill in at least 2 properties.';
+    document.getElementById('propError').style.display='block';return;
+  }
+  document.getElementById('propError').style.display='none';
+  document.getElementById('propSpin').style.display='flex';
+  document.getElementById('propResult').style.display='none';
+  document.getElementById('propPlaceholder').style.display='flex';
+  const desc=Object.entries(vals).filter(([k,v])=>v).map(([k,v])=>k+': '+v).join(', ');
+  const prompt=`You are a soil science expert. Based on these measured soil properties: ${desc}
+
+Identify the most likely soil type and provide detailed advice.
+Respond in plain text (no JSON). Structure your response with clear sections:
+
+SOIL TYPE: [name]
+CONFIDENCE: [High/Medium/Low] — [reason in one sentence]
+
+DESCRIPTION: [2-3 sentences about this soil type]
+
+AGRICULTURAL SUITABILITY: [what crops grow well, what doesn't work]
+
+ENGINEERING SUITABILITY: [foundation bearing capacity, risk factors, use in construction]
+
+IMPROVEMENT SUGGESTIONS: [3-4 practical steps to improve this soil]
+
+IS THIS SUITABLE FOR KARNATAKA/DECCAN CONDITIONS? [Yes/No + brief explanation]`;
+  try{
+    const text=await callClaude([{role:'user',content:prompt}],1400);
+    const box=document.getElementById('propResult');
+    box.innerHTML='<div class="ai-result-tag">Property Analysis</div><div class="ai-result-body">'+escHtml(text)+'</div>';
+    document.getElementById('propPlaceholder').style.display='none';
+    box.style.display='block';
+  }catch(err){
+    document.getElementById('propError').textContent='⚠️ Error: '+err.message;
+    document.getElementById('propError').style.display='block';
+  }finally{document.getElementById('propSpin').style.display='none';}
+}
+
+// ===== TOOL 3: STRUCTURE ADVISOR =====
+async function analyzeStructure(){
+  const soil=document.getElementById('s_soil').value.trim();
+  const desc=document.getElementById('s_desc').value.trim();
+  const floors=document.getElementById('s_floors').value;
+  const location=document.getElementById('s_location').value.trim();
+  const structure=selectedStructure||(desc?'(see description)':'');
+  if(!soil&&!desc){
+    document.getElementById('structError').textContent='Please enter soil type or describe your project.';
+    document.getElementById('structError').style.display='block';return;
+  }
+  if(!structure&&!desc){
+    document.getElementById('structError').textContent='Please select a structure type or describe your project.';
+    document.getElementById('structError').style.display='block';return;
+  }
+  document.getElementById('structError').style.display='none';
+  document.getElementById('structSpin').style.display='flex';
+  document.getElementById('structResult').style.display='none';
+  document.getElementById('structPlaceholder').style.display='flex';
+  const details=[soil&&('Soil: '+soil),structure&&('Structure: '+structure),floors&&('Floors: '+floors),location&&('Location: '+location),desc&&('Details: '+desc)].filter(Boolean).join('\n');
+  const prompt=`You are an expert geotechnical and structural engineer in India. A civil engineering student has asked for advice about a construction project.
+
+Project details:
+${details}
+
+Give detailed, practical geotechnical engineering advice. Structure your response clearly:
+
+SUITABILITY VERDICT: [Suitable / Conditionally Suitable / Not Suitable — with reason]
+
+FOUNDATION RECOMMENDATION: [Specific foundation type with dimensions if possible]
+
+KEY RISKS: [3-4 main geotechnical risks for this soil-structure combination]
+
+SOIL IMPROVEMENT NEEDED: [Yes/No — what treatment is required before construction]
+
+GEOTECHNICAL TESTS TO DO: [List 3-5 mandatory soil tests before construction]
+
+SPECIAL PRECAUTIONS: [Important construction precautions]
+
+ESTIMATED BEARING CAPACITY: [Approximate safe bearing capacity for this soil]
+
+Note: This is educational guidance. Always consult a licensed geotechnical engineer before actual construction.`;
+  try{
+    const text=await callClaude([{role:'user',content:prompt}],1600);
+    const box=document.getElementById('structResult');
+    box.innerHTML='<div class="ai-result-tag">Geotechnical Advice</div><h3 style="font-family:Lora,serif;font-size:1.2rem;margin-bottom:0.75rem;color:#fff">'+(soil||structure)+'</h3><div class="ai-result-body">'+escHtml(text)+'</div>';
+    document.getElementById('structPlaceholder').style.display='none';
+    box.style.display='block';
+  }catch(err){
+    document.getElementById('structError').textContent='⚠️ Error: '+err.message;
+    document.getElementById('structError').style.display='block';
+  }finally{document.getElementById('structSpin').style.display='none';}
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
 </body>
 </html>

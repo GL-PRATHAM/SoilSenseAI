@@ -13,17 +13,14 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Test API Route
 app.post("/api/claude", async (req, res) => {
-  try {
-    res.json({
-      reply: "API connected successfully"
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
-  }
+  res.json({
+    content: [
+      {
+        text: "Backend connected successfully. Claude API not configured yet."
+      }
+    ]
+  });
 });
 
 const PORT = process.env.PORT || 3000;

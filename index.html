@@ -1004,7 +1004,11 @@ async function callClaude(messages, maxTokens=1200){
     throw new Error(e.error?.message || 'API error '+res.status);
   }
   const data = await res.json();
-  return (data.content||[]).map(b=>b.text||'').join('').trim();
+
+console.log("FULL RESPONSE:", data);
+alert(JSON.stringify(data));
+
+return (data.content||[]).map(b=>b.text||'').join('').trim();
 }
 
 // ===== TOOL 1: IMAGE CLASSIFIER =====

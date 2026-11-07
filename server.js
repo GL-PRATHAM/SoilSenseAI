@@ -143,7 +143,6 @@ async function handleGeminiRequest(req, res) {
           contents,
           generationConfig: {
             maxOutputTokens,
-            temperature: 0.35,
           },
         }),
       }

@@ -983,32 +983,26 @@ function selectChip(el,val){
   selectedStructure=val;
 }
 
-// ===== SHARED API CALL =====
-// NOTE: When hosted on GitHub Pages, replace the URL below with your backend proxy URL
-// e.g. https://your-app.onrender.com/api/claude
-// For now it calls Anthropic directly — works in Claude.ai, blocked on regular hosting.
-const API_URL = 'https://soilsenseai.onrender.com/api/claude';
+// ===== SOILSENSE AI GEMINI BACKEND =====
+// The Gemini API key stays on Render and is never sent to the browser.
+const API_URL = 'https://soilsenseai.onrender.com/api/gemini';
 
-async function callClaude(messages, maxTokens=1200){
+async function callSoilSenseAI(messages, maxTokens=1200){
   const res = await fetch(API_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
       max_tokens: maxTokens,
       messages: messages
     })
   });
+
+  const data = await res.json().catch(()=>({}));
   if(!res.ok){
-    const e = await res.json().catch(()=>({}));
-    throw new Error(e.error?.message || 'API error '+res.status);
+    throw new Error(data.error?.message || 'AI request failed ('+res.status+').');
   }
-  const data = await res.json();
 
-console.log("FULL RESPONSE:", data);
-alert(JSON.stringify(data));
-
-return (data.content||[]).map(b=>b.text||'').join('').trim();
+  return (data.content||[]).map(b=>b.text||'').join('').trim();
 }
 
 // ===== TOOL 1: IMAGE CLASSIFIER =====
@@ -1052,7 +1046,7 @@ async function analyzeImage(){
 Always return a result. Respond ONLY with raw valid JSON — no markdown fences, no extra text:
 {"soil_type":"e.g. Red Laterite Soil","confidence":82,"description":"2-3 sentences about this soil type.","color":"observed colour","texture":"fine/medium/coarse","drainage":"poor/moderate/good/excellent","fertility":"low/medium/high","engineering_use":"1 sentence on suitability for civil engineering","common_crops":"2-3 suitable crops"}`;
   try{
-    const raw=await callClaude([{role:'user',content:[
+    const raw=await callSoilSenseAI([{role:'user',content:[
       {type:'image',source:{type:'base64',media_type:imgMime,data:imgB64}},
       {type:'text',text:prompt}
     ]}]);
@@ -1118,7 +1112,7 @@ IMPROVEMENT SUGGESTIONS: [3-4 practical steps to improve this soil]
 
 IS THIS SUITABLE FOR KARNATAKA/DECCAN CONDITIONS? [Yes/No + brief explanation]`;
   try{
-    const text=await callClaude([{role:'user',content:prompt}],1400);
+    const text=await callSoilSenseAI([{role:'user',content:prompt}],1400);
     const box=document.getElementById('propResult');
     box.innerHTML='<div class="ai-result-tag">Property Analysis</div><div class="ai-result-body">'+escHtml(text)+'</div>';
     document.getElementById('propPlaceholder').style.display='none';
@@ -1172,7 +1166,7 @@ ESTIMATED BEARING CAPACITY: [Approximate safe bearing capacity for this soil]
 
 Note: This is educational guidance. Always consult a licensed geotechnical engineer before actual construction.`;
   try{
-    const text=await callClaude([{role:'user',content:prompt}],1600);
+    const text=await callSoilSenseAI([{role:'user',content:prompt}],1600);
     const box=document.getElementById('structResult');
     box.innerHTML='<div class="ai-result-tag">Geotechnical Advice</div><h3 style="font-family:Lora,serif;font-size:1.2rem;margin-bottom:0.75rem;color:#fff">'+(soil||structure)+'</h3><div class="ai-result-body">'+escHtml(text)+'</div>';
     document.getElementById('structPlaceholder').style.display='none';

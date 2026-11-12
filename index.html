@@ -1084,9 +1084,26 @@ async function analyzeProperties(){
     clay:document.getElementById('p_clay').value,
     location:document.getElementById('p_location').value,
   };
-  const filled=Object.values(vals).filter(v=>v).length;
-  if(filled<2){
-    document.getElementById('propError').textContent='Please fill in at least 2 properties.';
+  // Location is contextual information, not a measured soil property.
+  const measured = ['color','texture','ph','drainage','organic','plasticity','sand','clay'];
+  const filled = measured.filter(k => String(vals[k] || '').trim() !== '').length;
+  if(filled < 2){
+    document.getElementById('propError').textContent='Please enter at least 2 soil observations or test values. Location alone does not count.';
+    document.getElementById('propError').style.display='block';return;
+  }
+  const ph = vals.ph === '' ? null : Number(vals.ph);
+  const sand = vals.sand === '' ? null : Number(vals.sand);
+  const clay = vals.clay === '' ? null : Number(vals.clay);
+  if(ph !== null && (!Number.isFinite(ph) || ph < 3 || ph > 10)){
+    document.getElementById('propError').textContent='Enter a valid soil pH between 3 and 10.';
+    document.getElementById('propError').style.display='block';return;
+  }
+  if([sand,clay].some(v => v !== null && (!Number.isFinite(v) || v < 0 || v > 100))){
+    document.getElementById('propError').textContent='Sand and clay percentages must each be between 0 and 100.';
+    document.getElementById('propError').style.display='block';return;
+  }
+  if(sand !== null && clay !== null && sand + clay > 100){
+    document.getElementById('propError').textContent='Sand + clay cannot exceed 100%. Check the percentages and leave room for silt.';
     document.getElementById('propError').style.display='block';return;
   }
   document.getElementById('propError').style.display='none';
@@ -1094,23 +1111,37 @@ async function analyzeProperties(){
   document.getElementById('propResult').style.display='none';
   document.getElementById('propPlaceholder').style.display='flex';
   const desc=Object.entries(vals).filter(([k,v])=>v).map(([k,v])=>k+': '+v).join(', ');
-  const prompt=`You are a soil science expert. Based on these measured soil properties: ${desc}
+  const prompt=`Act as an experienced soil scientist and geotechnical engineer familiar with Indian soils and Karnataka conditions.
 
-Identify the most likely soil type and provide detailed advice.
-Respond in plain text (no JSON). Structure your response with clear sections:
+The user supplied these observations/test values:
+${desc}
 
-SOIL TYPE: [name]
-CONFIDENCE: [High/Medium/Low] — [reason in one sentence]
+Analyse only what the inputs support. Do not invent missing test results. Treat colour and hand-feel as preliminary field observations, not laboratory proof. Sand and clay percentages may leave a silt fraction; do not assume the remainder is zero. If the available data cannot distinguish two soil groups, state both likely possibilities and explain what test will distinguish them.
 
-DESCRIPTION: [2-3 sentences about this soil type]
+Return a clear, practical report in this exact structure:
 
-AGRICULTURAL SUITABILITY: [what crops grow well, what doesn't work]
+1. MOST LIKELY SOIL GROUP
+Give the likely soil group/name, alternative possibility if relevant, and confidence (High / Medium / Low) with a reason.
 
-ENGINEERING SUITABILITY: [foundation bearing capacity, risk factors, use in construction]
+2. INTERPRETATION OF EACH INPUT
+Explain what the entered colour, texture, pH, drainage, organic matter, plasticity and percentages suggest. Mention any missing or inconsistent information.
 
-IMPROVEMENT SUGGESTIONS: [3-4 practical steps to improve this soil]
+3. AGRICULTURAL SUITABILITY
+Explain likely water-holding behaviour, drainage, nutrient/pH considerations and suitable crop categories. Do not promise yields.
 
-IS THIS SUITABLE FOR KARNATAKA/DECCAN CONDITIONS? [Yes/No + brief explanation]`;
+4. GEOTECHNICAL / CONSTRUCTION IMPLICATIONS
+Explain likely compressibility, swelling/shrinkage, permeability and workability only where supported. Do NOT give a safe bearing capacity or foundation design from these observations alone. State that those require site investigation and laboratory/field tests.
+
+5. RECOMMENDED NEXT TESTS
+Prioritise relevant tests such as sieve analysis, hydrometer analysis, Atterberg limits, natural moisture content, specific gravity, Proctor compaction, permeability and field SPT/CPT as appropriate. Explain why each is useful.
+
+6. PRACTICAL IMPROVEMENT
+Give 3-5 soil-management or ground-improvement options, clearly separating agricultural treatment from civil-engineering treatment.
+
+7. KARNATAKA / DECCAN CONTEXT
+Explain whether the interpretation is plausible for the stated location. If location is missing, say so.
+
+End with a short note that this is a preliminary screening, not a substitute for laboratory testing or a geotechnical investigation.`;
   try{
     const text=await callSoilSenseAI([{role:'user',content:prompt}],1400);
     const box=document.getElementById('propResult');
@@ -1143,28 +1174,45 @@ async function analyzeStructure(){
   document.getElementById('structResult').style.display='none';
   document.getElementById('structPlaceholder').style.display='flex';
   const details=[soil&&('Soil: '+soil),structure&&('Structure: '+structure),floors&&('Floors: '+floors),location&&('Location: '+location),desc&&('Details: '+desc)].filter(Boolean).join('\n');
-  const prompt=`You are an expert geotechnical and structural engineer in India. A civil engineering student has asked for advice about a construction project.
+  const prompt=`Act as a senior geotechnical engineer advising on a proposed building in India. Give a preliminary concept-level assessment, not a construction-ready design.
 
-Project details:
+Project information supplied by the user:
 ${details}
 
-Give detailed, practical geotechnical engineering advice. Structure your response clearly:
+Important engineering rules:
+- Do not invent soil investigation results, groundwater depth, loads, column reactions, SBC, dimensions or code compliance.
+- Never calculate or state a numerical safe bearing capacity from a soil name or brief description alone.
+- Do not prescribe footing dimensions or reinforcement without structural loads and a geotechnical report.
+- If critical information is missing, clearly list it and give conditional options rather than pretending certainty.
+- Consider Indian practice and relevant IS standards by name only where appropriate; do not claim a code check has been completed.
 
-SUITABILITY VERDICT: [Suitable / Conditionally Suitable / Not Suitable — with reason]
+Prepare the response using these sections:
 
-FOUNDATION RECOMMENDATION: [Specific foundation type with dimensions if possible]
+1. PROJECT UNDERSTANDING
+Restate the soil, structure, floor count and location provided. List assumptions explicitly.
 
-KEY RISKS: [3-4 main geotechnical risks for this soil-structure combination]
+2. PRELIMINARY SITE SUITABILITY
+Choose one: Potentially suitable / Conditionally suitable / High concern. Explain the basis and uncertainty.
 
-SOIL IMPROVEMENT NEEDED: [Yes/No — what treatment is required before construction]
+3. FOUNDATION OPTIONS
+Compare suitable concept options (isolated/combined/strip footings, raft, piles or ground improvement) only as applicable. Explain what site data would decide between them. No unsupported dimensions.
 
-GEOTECHNICAL TESTS TO DO: [List 3-5 mandatory soil tests before construction]
+4. KEY GEOTECHNICAL RISKS
+Discuss relevant risks such as expansive soil, differential settlement, low bearing resistance, filled ground, erosion, groundwater, liquefaction or slope instability. Do not list irrelevant risks as if confirmed.
 
-SPECIAL PRECAUTIONS: [Important construction precautions]
+5. REQUIRED INVESTIGATION
+Recommend a practical sequence: site reconnaissance, boreholes/trial pits, SPT/CPT where suitable, groundwater observation, sampling and relevant laboratory tests (grain-size distribution, Atterberg limits, natural moisture, specific gravity, compaction, shear strength and consolidation as appropriate).
 
-ESTIMATED BEARING CAPACITY: [Approximate safe bearing capacity for this soil]
+6. DESIGN INPUTS STILL REQUIRED
+List structural loads/column layout, building drawings, soil profile, groundwater level, nearby foundations, slope/topography and applicable local requirements.
 
-Note: This is educational guidance. Always consult a licensed geotechnical engineer before actual construction.`;
+7. CONSTRUCTION PRECAUTIONS
+Give practical precautions for excavation, dewatering, founding level, compaction, drainage, adjacent structures and quality control as relevant.
+
+8. RECOMMENDED NEXT ACTION
+Give the next 3 steps the user should take before finalising a foundation.
+
+Finish with: This is preliminary educational guidance only. A licensed geotechnical/structural engineer must review the site investigation and structural loads before construction.`;
   try{
     const text=await callSoilSenseAI([{role:'user',content:prompt}],1600);
     const box=document.getElementById('structResult');

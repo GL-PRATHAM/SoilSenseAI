@@ -135,8 +135,9 @@ async function handleGeminiRequest(req, res) {
     // supported Flash model if the primary model is temporarily unavailable.
     const modelCandidates = [...new Set([
       model,
-      "gemini-3.7-flash",
+      "gemini-3.6-flash",
       "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
     ])];
     let response = null;
     let activeModel = model;

@@ -1061,7 +1061,7 @@ Always return a result. Respond ONLY with raw valid JSON — no markdown fences,
     document.getElementById('rDesc').textContent=r.description||'';
     const props=[{l:'Colour',v:r.color},{l:'Texture',v:r.texture},{l:'Drainage',v:r.drainage},{l:'Fertility',v:r.fertility},{l:'Engineering use',v:r.engineering_use},{l:'Suited crops',v:r.common_crops}].filter(p=>p.v);
     const grid=document.getElementById('rProps');grid.innerHTML='';
-    props.forEach(p=>{const d=document.createElement('div');d.className='r-prop';d.innerHTML='<div class="r-prop-lbl">'+p.l+'</div><div class="r-prop-val">'+p.v+'</div>';grid.appendChild(d);});
+    props.forEach(p=>{const d=document.createElement('div');d.className='r-prop';const label=document.createElement('div');label.className='r-prop-lbl';label.textContent=p.l;const value=document.createElement('div');value.className='r-prop-val';value.textContent=p.v;d.append(label,value);grid.appendChild(d);});
     document.getElementById('imgPlaceholder').style.display='none';
     document.getElementById('imgResult').style.display='block';
   }catch(err){
@@ -1069,6 +1069,82 @@ Always return a result. Respond ONLY with raw valid JSON — no markdown fences,
     document.getElementById('imgError').style.display='block';
     document.getElementById('analyzeBtn').style.display='block';
   }finally{document.getElementById('imgSpin').style.display='none';}
+}
+
+// ===== OFFLINE FALLBACKS: TRANSPARENT PRELIMINARY GUIDANCE =====
+// These rules do not claim laboratory classification. They keep Tools 2 and 3
+// useful when the optional Gemini service is unavailable.
+function buildOfflinePropertyReport(v){
+  const out=[];
+  const clues=[];
+  if(/gritty|sandy/i.test(v.texture)) clues.push('The hand-feel suggests a coarse fraction may be significant.');
+  if(/sticky|plastic/i.test(v.texture)) clues.push('The sticky/plastic hand-feel suggests appreciable fine-grained material may be present.');
+  if(/smooth|silky/i.test(v.texture)) clues.push('The smooth/silky feel may indicate silt or fine sand; a particle-size test is needed.');
+  if(/crumbly|loose/i.test(v.texture)) clues.push('The crumbly/loose feel is not enough to distinguish granular soil from weakly aggregated fine soil.');
+  if(/high plasticity/i.test(v.plasticity)) clues.push('High wet plasticity is a warning of clay-rich behaviour and possible shrink-swell potential.');
+  else if(/medium plasticity/i.test(v.plasticity)) clues.push('Medium plasticity suggests some cohesive fines; Atterberg limits are needed to quantify it.');
+  else if(/low plasticity/i.test(v.plasticity)) clues.push('Low plasticity suggests limited plastic behaviour, but does not identify the soil group.');
+  else if(/non-plastic/i.test(v.plasticity)) clues.push('Non-plastic behaviour is consistent with clean granular soil or non-plastic fines; grading tests are required.');
+  if(/very fast/i.test(v.drainage)) clues.push('Very fast drainage is consistent with a relatively permeable soil or coarse connected pores.');
+  else if(/slowly|waterlogged/i.test(v.drainage)) clues.push('Slow drainage or waterlogging indicates a drainage concern; fine soil, compaction, a shallow water table or site topography may contribute.');
+  if(v.color) clues.push('Colour recorded as '+v.color+' is descriptive only; colour alone cannot establish soil type or mineral composition.');
+  out.push('OFFLINE PRELIMINARY SCREENING — Gemini is currently unavailable. This is a rule-based interpretation of the entries, not a laboratory soil classification.');
+  out.push('1. MOST LIKELY SOIL GROUP');
+  if(/high plasticity/i.test(v.plasticity)||/sticky|plastic/i.test(v.texture)) out.push('Clay-bearing fine soil is a possibility. Confidence: LOW without liquid limit, plasticity index and particle-size distribution. Do not assign a USCS/IS soil group from hand-feel alone.');
+  else if(/gritty|sandy/i.test(v.texture)||(/non-plastic/i.test(v.plasticity)&&Number(v.sand)>=50)) out.push('Granular or sand-bearing soil is a possibility. Confidence: LOW without sieve analysis and fines content.');
+  else out.push('Insufficient evidence to identify a dominant soil group. Confidence: LOW. Obtain particle-size distribution and Atterberg limits.');
+  out.push('2. INPUT INTERPRETATION');
+  out.push(clues.length?clues.join(' '):'No qualitative observations were supplied beyond the numerical values. Add texture, drainage and plasticity observations if available.');
+  if(v.ph!==''){
+    const p=Number(v.ph);
+    const label=p<5.5?'acidic':p<6.5?'slightly acidic':p<=7.5?'near neutral':'alkaline';
+    out.push('Measured pH '+p+' is '+label+'. pH is relevant to nutrient availability and soil treatment, but does not determine engineering soil classification.');
+  }
+  if(v.sand!==''||v.clay!==''){
+    out.push('Reported approximate fractions: sand '+(v.sand===''?'not supplied':v.sand+'%')+'; clay '+(v.clay===''?'not supplied':v.clay+'%')+'.');
+    if(v.sand!==''&&v.clay!=='') out.push('Implied remainder (potential silt/other fraction) is '+(100-Number(v.sand)-Number(v.clay)).toFixed(1)+'%, only if both percentages are measured on the same dry-mass basis and the three fractions sum to 100%.');
+  }
+  if(v.organic) out.push('Organic matter observation: '+v.organic+'. Visual appearance is not a quantitative organic-content test.');
+  out.push('3. AGRICULTURAL CONSIDERATIONS');
+  out.push('Use pH, drainage and a laboratory nutrient/organic-carbon test to guide crop and amendment decisions. Avoid prescribing lime, gypsum or fertiliser rates without soil test results. Match irrigation to measured infiltration and water-holding behaviour.');
+  out.push('4. GEOTECHNICAL CONSIDERATIONS');
+  out.push('Do not infer safe bearing capacity, settlement, expansiveness or foundation type from these observations. Obtain a site investigation and relevant strength/compressibility tests before design.');
+  out.push('5. NEXT TESTS');
+  out.push('Priority: (1) sieve analysis plus hydrometer analysis where fines are present; (2) liquid limit, plastic limit and plasticity index; (3) natural moisture content and specific gravity. For earthwork, add Proctor compaction. For foundation design, select field and laboratory strength/settlement tests based on the project.');
+  out.push('6. LOCATION CONTEXT');
+  out.push(v.location?'Location supplied: '+v.location+'. Regional geology can guide sampling, but cannot replace site-specific testing.':'No location supplied; regional context cannot be assessed.');
+  out.push('This offline result is preliminary educational screening only. It is not a certified soil classification, agricultural prescription or geotechnical design.');
+  return out.join('\n\n');
+}
+
+function buildOfflineStructureReport(data){
+  const text=(data.soil+' '+data.desc).toLowerCase();
+  const out=[];
+  const risks=[];
+  if(/black cotton|expansive|swelling|shrink/.test(text)) risks.push('Possible expansive-soil behaviour: seasonal volume change and differential movement need investigation.');
+  if(/loose sand|loose sandy|running sand|sandy fill/.test(text)) risks.push('Possible loose granular or fill material: settlement, excavation stability and groundwater effects need assessment.');
+  if(/soft clay|organic|peat|marsh|filled ground|uncontrolled fill/.test(text)) risks.push('Possible compressible/variable ground: settlement and thickness of weak deposits need investigation.');
+  if(/laterite|weathered rock/.test(text)) risks.push('Lateritic/weathered profiles can vary significantly over short distances; confirm thickness, cementation, weathering and strength in the field.');
+  if(/slope|hill|embankment|retaining/.test(text)) risks.push('Slope stability, erosion and groundwater conditions may be important and require a site-specific assessment.');
+  out.push('OFFLINE PRELIMINARY ADVISORY — Gemini is unavailable. This rule-based note is not a foundation design.');
+  out.push('1. PROJECT INFORMATION');
+  out.push('Soil description: '+(data.soil||'Not supplied')+'. Structure: '+(data.structure||'Not specified')+'. Floors: '+(data.floors||'Not supplied')+'. Location: '+(data.location||'Not supplied')+'. Additional details: '+(data.desc||'None')+'.');
+  out.push('2. PRELIMINARY SUITABILITY');
+  out.push('Status: CONDITIONALLY SUITABLE ONLY AFTER INVESTIGATION. The supplied description is insufficient to confirm site suitability, bearing resistance or settlement performance.');
+  out.push('3. FOUNDATION OPTIONS');
+  out.push('No foundation type can be selected safely from the current information. A geotechnical engineer should compare shallow foundations, raft foundations, piles or ground improvement only after reviewing the soil profile, groundwater, test results and structural column loads.');
+  out.push('4. POSSIBLE GEOTECHNICAL RISKS');
+  out.push(risks.length?risks.join(' '):'The soil description does not identify a specific hazard. Check settlement, groundwater, variability, slope conditions and adjacent foundations during investigation.');
+  out.push('5. REQUIRED INVESTIGATION');
+  out.push('Start with site reconnaissance and trial pits/boreholes appropriate to the building and ground conditions. Record strata and groundwater. Consider SPT/CPT where suitable, grain-size distribution, Atterberg limits, natural moisture, specific gravity, compaction, shear-strength and consolidation tests as directed by the geotechnical engineer.');
+  out.push('6. DESIGN INPUTS STILL REQUIRED');
+  out.push('Geotechnical profile and test results; groundwater level and seasonal variation; structural drawings; column/wall loads and load combinations; site levels; nearby structures; excavation constraints; and applicable local requirements.');
+  out.push('7. CONSTRUCTION PRECAUTIONS');
+  out.push('Do not start foundation excavation based on this screening. Verify founding strata, control water ingress, protect adjacent structures, compact engineered fill to a specified method, and obtain inspection/approval before concrete placement.');
+  out.push('8. NEXT ACTIONS');
+  out.push('1) Arrange a site-specific geotechnical investigation. 2) Obtain preliminary structural loads and layout from the structural designer. 3) Have a qualified geotechnical/structural engineer select and design the foundation using the investigation results.');
+  out.push('This is preliminary educational guidance only. A licensed geotechnical/structural engineer must review the site investigation and structural loads before construction.');
+  return out.join('\n\n');
 }
 
 // ===== TOOL 2: PROPERTY INPUT =====
@@ -1149,7 +1225,12 @@ End with a short note that this is a preliminary screening, not a substitute for
     document.getElementById('propPlaceholder').style.display='none';
     box.style.display='block';
   }catch(err){
-    document.getElementById('propError').textContent='⚠️ Error: '+err.message;
+    const offline=buildOfflinePropertyReport(vals);
+    const box=document.getElementById('propResult');
+    box.innerHTML='<div class="ai-result-tag">Offline preliminary screening · AI unavailable</div><div class="ai-result-body">'+escHtml(offline)+'</div>';
+    document.getElementById('propPlaceholder').style.display='none';
+    box.style.display='block';
+    document.getElementById('propError').textContent='Gemini could not respond ('+err.message+'). Showing a limited offline interpretation instead.';
     document.getElementById('propError').style.display='block';
   }finally{document.getElementById('propSpin').style.display='none';}
 }
@@ -1216,11 +1297,16 @@ Finish with: This is preliminary educational guidance only. A licensed geotechni
   try{
     const text=await callSoilSenseAI([{role:'user',content:prompt}],1600);
     const box=document.getElementById('structResult');
-    box.innerHTML='<div class="ai-result-tag">Geotechnical Advice</div><h3 style="font-family:Lora,serif;font-size:1.2rem;margin-bottom:0.75rem;color:#fff">'+(soil||structure)+'</h3><div class="ai-result-body">'+escHtml(text)+'</div>';
+    box.innerHTML='<div class="ai-result-tag">Geotechnical Advice</div><h3 style="font-family:Lora,serif;font-size:1.2rem;margin-bottom:0.75rem;color:#fff">'+escHtml(soil||structure)+'</h3><div class="ai-result-body">'+escHtml(text)+'</div>';
     document.getElementById('structPlaceholder').style.display='none';
     box.style.display='block';
   }catch(err){
-    document.getElementById('structError').textContent='⚠️ Error: '+err.message;
+    const offline=buildOfflineStructureReport({soil,desc,structure,floors,location});
+    const box=document.getElementById('structResult');
+    box.innerHTML='<div class="ai-result-tag">Offline preliminary guidance · AI unavailable</div><h3 style="font-family:Lora,serif;font-size:1.2rem;margin-bottom:0.75rem;color:#fff">'+escHtml(soil||structure)+'</h3><div class="ai-result-body">'+escHtml(offline)+'</div>';
+    document.getElementById('structPlaceholder').style.display='none';
+    box.style.display='block';
+    document.getElementById('structError').textContent='Gemini could not respond ('+err.message+'). Showing limited offline guidance instead.';
     document.getElementById('structError').style.display='block';
   }finally{document.getElementById('structSpin').style.display='none';}
 }

@@ -164,9 +164,11 @@ async function handleGeminiRequest(req, res) {
           );
           lastNetworkError = null;
 
-          // Retry transient capacity/server failures; try the next model
-          // after the primary model has exhausted its retries.
-          if (![502, 503, 504, 404].includes(response.status)) break;
+          // A 429 can be model-specific. Do not hammer the same model:
+          // move immediately to the next supported Flash candidate.
+          // Retry only transient upstream capacity/server failures.
+          if (response.status === 429 || response.status === 404) break;
+          if (![502, 503, 504].includes(response.status)) break;
         } catch (error) {
           lastNetworkError = error;
           response = null;
@@ -178,7 +180,8 @@ async function handleGeminiRequest(req, res) {
       }
 
       if (response?.ok) break;
-      if (response && ![502, 503, 504, 404].includes(response.status)) break;
+      if (response && [429, 404, 502, 503, 504].includes(response.status)) continue;
+      if (response) break;
     }
 
     if (!response) {
@@ -190,7 +193,7 @@ async function handleGeminiRequest(req, res) {
     if (!response.ok) {
       const status = response.status === 429 ? 429 : response.status === 400 ? 400 : response.status === 403 ? 403 : 502;
       const message = status === 429
-        ? "Gemini API quota or rate limit reached. Please try again later."
+        ? "Google Gemini returned a quota/rate-limit response for the available models. Free-tier limits may be exhausted; wait for the quota window to reset or check Google AI Studio usage and model limits."
         : status === 403
           ? "Gemini rejected the API key or the key does not have access to this model. Check Google AI Studio and Render Environment settings."
           : status === 400

@@ -131,22 +131,58 @@ async function handleGeminiRequest(req, res) {
   const maxOutputTokens = Math.min(Math.max(requestedTokens, 128), 8192);
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            maxOutputTokens,
-          },
-        }),
+    // Retry temporary Google API/network failures and fail over to another
+    // supported Flash model if the primary model is temporarily unavailable.
+    const modelCandidates = [...new Set([
+      model,
+      "gemini-3.7-flash",
+      "gemini-3.5-flash",
+    ])];
+    let response = null;
+    let activeModel = model;
+    let lastNetworkError = null;
+
+    for (const candidate of modelCandidates) {
+      activeModel = candidate;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": process.env.GEMINI_API_KEY,
+              },
+              body: JSON.stringify({
+                contents,
+                generationConfig: { maxOutputTokens },
+              }),
+              signal: AbortSignal.timeout(45000),
+            }
+          );
+          lastNetworkError = null;
+
+          // Retry transient capacity/server failures; try the next model
+          // after the primary model has exhausted its retries.
+          if (![502, 503, 504, 404].includes(response.status)) break;
+        } catch (error) {
+          lastNetworkError = error;
+          response = null;
+        }
+
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 700 * (2 ** attempt)));
+        }
       }
-    );
+
+      if (response?.ok) break;
+      if (response && ![502, 503, 504, 404].includes(response.status)) break;
+    }
+
+    if (!response) {
+      throw lastNetworkError || new Error("Gemini could not be reached after retries.");
+    }
 
     const result = await response.json().catch(() => ({}));
 
@@ -159,7 +195,7 @@ async function handleGeminiRequest(req, res) {
           : status === 400
             ? "Gemini rejected the request. Check the image format and input values."
             : "Gemini is temporarily unavailable. Please try again.";
-      console.error("Gemini request failed with HTTP status:", response.status);
+      console.error("Gemini request failed with HTTP status:", response.status, "model:", activeModel);
       return res.status(status).json({ error: { message } });
     }
 
@@ -178,7 +214,7 @@ async function handleGeminiRequest(req, res) {
     // Preserve the response shape expected by the existing three frontend tools.
     return res.json({ content: [{ text }] });
   } catch (error) {
-    console.error("Gemini network error:", error.message);
+    console.error("Gemini network error after retries/model fallback:", error.message);
     return res.status(502).json({
       error: { message: "Could not reach Gemini. Please try again in a moment." },
     });

@@ -1,0 +1,12 @@
+{
+  "appId": "com.glpratham.soilsenseai",
+  "appName": "SoilSense AI",
+  "webDir": "www",
+  "server": {
+    "url": "https://soilsenseai.onrender.com",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

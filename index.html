@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SoilSense AI — Soil Classification | MIT Mysore</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0b1e3d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SoilSense AI">
+<link rel="apple-touch-icon" href="/icons/icon-192.svg">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Lora:ital,wght@0,500;0,600;1,400&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1330,6 +1337,45 @@ Finish with: This is preliminary educational guidance only. A licensed geotechni
 }
 
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+
+<script>
+/* SoilSense AI install support */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('PWA service worker:', err));
+  });
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (document.getElementById('soilsense-install-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'soilsense-install-btn';
+  btn.type = 'button';
+  btn.textContent = '⬇ Install App';
+  btn.setAttribute('aria-label', 'Install SoilSense AI app');
+  Object.assign(btn.style, {
+    position:'fixed', right:'18px', bottom:'18px', zIndex:'9999',
+    border:'0', borderRadius:'999px', padding:'13px 19px',
+    color:'#fff', background:'linear-gradient(135deg,#1a6bcc,#0d9488)',
+    boxShadow:'0 8px 28px rgba(11,30,61,.28)', font:'600 14px Sora,sans-serif',
+    cursor:'pointer'
+  });
+  btn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    btn.remove();
+  });
+  document.body.appendChild(btn);
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('soilsense-install-btn')?.remove();
+  deferredInstallPrompt = null;
+});
 </script>
 </body>
 </html>

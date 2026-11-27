@@ -30,6 +30,8 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: "12mb" }));
+// Serve the PWA shell and static assets from the existing app origin.
+app.use(express.static(__dirname, { extensions: ["html"] }));
 
 // Lightweight per-IP request limit to reduce accidental quota abuse.
 const requestCounts = new Map();

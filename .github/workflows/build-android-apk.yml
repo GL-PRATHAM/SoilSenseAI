@@ -31,7 +31,6 @@ jobs:
 
       - name: Install Capacitor
         run: |
-          npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Generate Android project

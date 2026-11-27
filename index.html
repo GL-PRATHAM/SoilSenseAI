@@ -163,7 +163,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(11,30,61,0.9
 .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
 .tc{background:var(--off-white);border-radius:18px;padding:1.75rem;text-align:center;border:1px solid var(--gray-100);transition:box-shadow 0.25s}
 .tc:hover{box-shadow:0 12px 32px rgba(15,23,42,0.08)}
-.tc-lead{border:2px solid var(--amber-light);background:#fffbeb}
 .av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin:0 auto 1rem}
 .av-s{background:var(--sky);color:var(--navy)}
 .av-p{background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff}
@@ -172,7 +171,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(11,30,61,0.9
 .tc-detail{font-size:0.8rem;color:var(--gray-600);line-height:1.65}
 .tc-badge{display:inline-block;margin-top:0.85rem;background:var(--gray-50);color:var(--gray-600);font-size:0.7rem;padding:5px 14px;border-radius:100px;font-weight:500;border:1px solid var(--gray-100)}
 .tc-usn{font-family:monospace;letter-spacing:0.04em;background:var(--navy);color:#7ec8ff;border:none}
-.lead-badge{display:inline-block;background:var(--amber);color:#fff;font-size:0.62rem;font-weight:700;padding:3px 12px;border-radius:100px;letter-spacing:0.08em;margin-bottom:0.5rem}
+.credit-watermark{font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;text-align:center;color:rgba(13,148,136,0.68);font-weight:600;padding:0.85rem 1rem;border-top:1px solid rgba(13,148,136,0.14);border-bottom:1px solid rgba(13,148,136,0.14);margin:0.75rem 0 1.5rem}
 .inst-row{margin-top:2rem;background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:18px;padding:1.75rem 2rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
 .inst-icon{font-size:2.2rem;flex-shrink:0}
 .inst-name{font-family:'Lora',serif;font-size:1.15rem;color:#fff;font-weight:600}
@@ -230,7 +229,7 @@ footer{background:var(--navy);padding:2.5rem;text-align:center;border-top:1px so
 
 <div class="info-band">
   <div class="info-band-inner">
-    <div class="ib-card"><div class="ib-label">Project Creator</div><div class="ib-val">GL Pratham</div><div class="ib-sub">Team Lead · Civil Engineering</div></div>
+    <div class="ib-card"><div class="ib-label">Project Creator</div><div class="ib-val">GL Pratham</div><div class="ib-sub">Developer · Civil Engineering</div></div>
     <div class="ib-card"><div class="ib-label">Project Guide</div><div class="ib-val">Prof. Varun.S</div><div class="ib-sub">Associate Professor, Civil Engg.</div></div>
     <div class="ib-card"><div class="ib-label">Institution</div><div class="ib-val">Maharaja Institute of Technology</div><div class="ib-sub">Mysore, Karnataka, India</div></div>
     <div class="ib-card"><div class="ib-label">AI Tools</div><div class="ib-val">Image · Properties · Structure</div><div class="ib-sub">3 AI panels · Powered by Claude</div></div>
@@ -904,6 +903,7 @@ function toggleSoil(card){
 
 <section class="sec team-bg" id="team">
   <div class="sec-inner">
+    <div class="credit-watermark">PRATHAM 0001 · CIVIL ENGINEERING DEPARTMENT · MIT MYSORE</div>
     <div class="sec-tag">The people behind this</div>
     <h2 class="sec-title">Project team</h2>
     <p class="sec-lead">Conducted at the Department of Civil Engineering, Maharaja Institute of Technology, Mysore.</p>
@@ -919,10 +919,9 @@ function toggleSoil(card){
     </div>
     <div style="margin-bottom:0.6rem;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);font-weight:600">Student team · B.E. Civil Engineering</div>
     <div class="team-grid">
-      <div class="tc tc-lead" style="position:relative">
-        <div class="lead-badge">Team Lead</div>
+      <div class="tc">
         <div class="av av-s">GP</div>
-        <div class="tc-role">Project Creator &amp; Team Lead</div>
+        <div class="tc-role">Project Creator &amp; Developer</div>
         <div class="tc-name">GL Pratham</div>
         <div class="tc-detail">Leading the research, design, and development of this AI soil classification system. World Record Holder · YouTuber (@Prathamgowda0001).</div>
         <span class="tc-badge tc-usn">USN: 4MH23CV016</span>
@@ -956,13 +955,14 @@ function toggleSoil(card){
         <div class="inst-sub">Department of Civil Engineering · Affiliated to VTU, Belagavi · Mysore, Karnataka, India</div>
       </div>
     </div>
+    <div class="credit-watermark">DEVELOPED BY PRATHAM 0001 · MIT MYSORE</div>
   </div>
 </section>
 
 <footer>
   <div class="ft-logo">SoilSense AI</div>
   <div class="ft-line">Maharaja Institute of Technology, Mysore · Department of Civil Engineering</div>
-  <div class="ft-line">Created by GL Pratham · Under the guidance of Prof. Varun.S</div>
+  <div class="ft-line">Developed by PRATHAM 0001 · Under the guidance of Prof. Varun.S</div>
   <div class="ft-date">Project initiated: May 10, 2026 &nbsp;·&nbsp; MIT Mysore, Karnataka, India</div>
 </footer>
 

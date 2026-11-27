@@ -6,6 +6,10 @@ on:
     paths:
       - "capacitor.config.json"
       - "www/**"
+      - "index.html"
+      - "manifest.json"
+      - "sw.js"
+      - "icons/**"
       - ".github/workflows/build-android-apk.yml"
 
 permissions:

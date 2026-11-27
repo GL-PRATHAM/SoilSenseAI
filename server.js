@@ -30,8 +30,13 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: "12mb" }));
-// Serve the PWA shell and static assets from the existing app origin.
-app.use(express.static(__dirname, { extensions: ["html"] }));
+// Serve only the public PWA assets; do not expose backend source or config files.
+app.get("/manifest.json", (req, res) => res.sendFile(path.join(__dirname, "manifest.json")));
+app.get("/sw.js", (req, res) => {
+  res.setHeader("Service-Worker-Allowed", "/");
+  res.sendFile(path.join(__dirname, "sw.js"));
+});
+app.use("/icons", express.static(path.join(__dirname, "icons"), { dotfiles: "deny", index: false }));
 
 // Lightweight per-IP request limit to reduce accidental quota abuse.
 const requestCounts = new Map();

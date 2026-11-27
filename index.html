@@ -183,6 +183,18 @@ footer{background:var(--navy);padding:2.5rem;text-align:center;border-top:1px so
 .ft-date{font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:0.5rem}
 .divider{height:1px;background:linear-gradient(to right,transparent,var(--gray-100),transparent);max-width:1100px;margin:0 auto}
 
+
+/* AUTHORSHIP WATERMARK — persistent moving credit across the entire site */
+.site-watermark{position:fixed;left:0;right:0;bottom:0;z-index:9999;overflow:hidden;background:rgba(7,22,45,.94);border-top:1px solid rgba(20,184,166,.55);box-shadow:0 -5px 20px rgba(11,30,61,.12);height:34px;display:flex;align-items:center;pointer-events:none}
+.site-watermark-track{display:flex;width:max-content;white-space:nowrap;animation:watermarkFlow 28s linear infinite}
+.site-watermark-track span{font-size:11px;font-weight:700;letter-spacing:.18em;color:#b8f3e9;padding-right:3.5rem;text-transform:uppercase}
+@keyframes watermarkFlow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+body{padding-bottom:34px}
+.preview-watermark-wrap{position:relative;width:100%;margin-bottom:1rem;border-radius:10px;overflow:hidden;display:none}
+.preview-watermark-wrap #previewImg{margin-bottom:0}
+.preview-watermark-wrap::after{content:"GL PRATHAM · CIVIL DEPARTMENT · MIT MYSORE";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-18deg);width:125%;text-align:center;color:rgba(255,255,255,.82);font-size:clamp(10px,2vw,15px);font-weight:700;letter-spacing:.13em;text-shadow:0 1px 5px rgba(0,0,0,.85);border-top:1px solid rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.45);padding:8px 0;pointer-events:none;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.site-watermark-track{animation:none}}
+
 @media(max-width:768px){
   .about-grid,.cls-grid,.form-row{grid-template-columns:1fr}
   .nav-links{display:none}
@@ -192,6 +204,12 @@ footer{background:var(--navy);padding:2.5rem;text-align:center;border-top:1px so
 </style>
 </head>
 <body>
+<div class="site-watermark" aria-label="Developed by GL Pratham, Civil Department, MIT Mysore">
+  <div class="site-watermark-track" aria-hidden="true">
+    <span>GL PRATHAM · CIVIL DEPARTMENT · MIT MYSORE · DEVELOPED &amp; LAUNCHED BY GL PRATHAM · </span>
+    <span>GL PRATHAM · CIVIL DEPARTMENT · MIT MYSORE · DEVELOPED &amp; LAUNCHED BY GL PRATHAM · </span>
+  </div>
+</div>
 
 <nav>
   <div class="nav-brand">
@@ -720,7 +738,7 @@ function toggleSoil(card){
         <div class="upload-box">
           <div class="upload-zone" id="uploadZone">
             <input type="file" accept="image/*" id="fileInput" />
-            <img id="previewImg" alt="Uploaded soil preview" />
+            <div class="preview-watermark-wrap"><img id="previewImg" alt="Uploaded soil preview" /><span class="image-watermark">GL PRATHAM · CIVIL DEPARTMENT · MIT MYSORE</span></div>
             <div id="uploadPrompt">
               <div class="upload-icon-big">🌍</div>
               <div class="upload-title">Drop your soil image here</div>
